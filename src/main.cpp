@@ -127,8 +127,10 @@ int main() {
             if (Event.type == SDL_QUIT) {
                 break;
             }
+            // keyup events
             if (Event.type == SDL_KEYUP) {
-                std::cout << "Key: " << Event.key.keysym.sym << std::endl;
+                //std::cout << "Key: " << Event.key.keysym.sym << std::endl;
+                // 'P' for pause
                 if (Event.key.keysym.sym == SDLK_p) {
                     if (!paused) {
                         std::cout << "Game paused." << std::endl;
@@ -137,6 +139,21 @@ int main() {
                         std::cout << "Game resumed." << std::endl;
                         paused = false;                        
                     }
+                }
+                // 'f' for faster
+                if (Event.key.keysym.sym == SDLK_f) {
+                    std::cout << "Speed increased." << std::endl;
+                    updateInterval -= 10;
+                }
+                // 's' for slower
+                if (Event.key.keysym.sym == SDLK_s) {
+                    std::cout << "Speed decreased." << std::endl;
+                    updateInterval += 10;
+                }
+                // 'r' for restart
+                if (Event.key.keysym.sym == SDLK_r) {
+                    std::cout << "Restarted." << std::endl;
+                    initialize();
                 }
             }
         }
