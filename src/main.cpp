@@ -42,6 +42,88 @@ void update() {
             int gw = GRID_WIDTH-1;
 
             // assign cellMap neighbours values to neighbours array
+            // this assumes that out of bounds cells are dead
+            if (i != 0 && j != 0 && i != gh && j != gw) {
+                // if neither column nor row are first or last/top or bottom, normal rules apply
+                nb[0] = cellMap[i-1][j-1]; // NW
+                nb[1] = cellMap[i-1][j];   // N
+                nb[2] = cellMap[i-1][j+1]; // NE
+                nb[3] = cellMap[i][j-1];   // W
+                nb[4] = cellMap[i][j+1];   // E
+                nb[5] = cellMap[i+1][j-1]; // SW
+                nb[6] = cellMap[i+1][j];   // S
+                nb[7] = cellMap[i+1][j+1]; // SE
+            } else if (i == 0 && (j != 0 && j != gw)) {
+                // wrap row from top to bottom
+                int wrapToBottom = gh + 1;
+                nb[0] = cellMap[wrapToBottom+i-1][j-1]; // NW
+                nb[1] = cellMap[wrapToBottom+i-1][j];   // N
+                nb[2] = cellMap[wrapToBottom+i-1][j+1]; // NE
+                nb[3] = cellMap[i][j-1];   // W
+                nb[4] = cellMap[i][j+1];   // E
+                nb[5] = cellMap[i+1][j-1]; // SW
+                nb[6] = cellMap[i+1][j];   // S
+                nb[7] = cellMap[i+1][j+1]; // SE
+            } else if (i == gh && (j != 0 && j != gw)) {
+                // wrap row from bottom to top
+                int wrapToTop = -gh + 1;                
+                nb[0] = cellMap[i-1][j-1]; // NW
+                nb[1] = cellMap[i-1][j];   // N
+                nb[2] = cellMap[i-1][j+1]; // NE
+                nb[3] = cellMap[i][j-1];   // W
+                nb[4] = cellMap[i][j+1];   // E
+                nb[5] = cellMap[wrapToTop+i+1][j-1]; // SW
+                nb[6] = cellMap[wrapToTop+i+1][j];   // S
+                nb[7] = cellMap[wrapToTop+i+1][j+1]; // SE
+            } else if (j == 0 && (i != 0 && i != gh)) {
+                // wrap row from the left column to the right
+                int wrapToRight = gw + 1;
+                nb[0] = cellMap[i-1][wrapToRight+j-1]; // NW
+                nb[1] = cellMap[i-1][j];   // N
+                nb[2] = cellMap[i-1][j+1]; // NE
+                nb[3] = cellMap[i][wrapToRight+j-1];   // W
+                nb[4] = cellMap[i][j+1];   // E
+                nb[5] = cellMap[i+1][wrapToRight+j-1]; // SW
+                nb[6] = cellMap[i+1][j];   // S
+                nb[7] = cellMap[i+1][j+1]; // SE
+            } else if (j == gw && (i != 0 && i != gh)) {
+                // wrap from the right colum to the left
+                int wrapToLeft = -gw + 1;
+                nb[0] = cellMap[i-1][j-1]; // NW
+                nb[1] = cellMap[i-1][j];   // N
+                nb[2] = cellMap[i-1][wrapToLeft+j+1]; // NE
+                nb[3] = cellMap[i][j-1];   // W
+                nb[4] = cellMap[i][wrapToLeft+j+1];   // E
+                nb[5] = cellMap[i+1][j-1]; // SW
+                nb[6] = cellMap[i+1][j];   // S
+                nb[7] = cellMap[i+1][wrapToLeft+j+1]; // SE                
+            }
+            if (i == 0 && j == 0) {
+                nb[0] = cellMap[gh][gw];
+            }
+            if (i == 0 && j == gw) {
+                nb[2] = cellMap[gh][0];
+            }
+            if (i == gh && j == 0) {
+                nb[5] = cellMap[0][gw];
+            }
+            if (i == gh && j == gw) {
+                nb[7] = cellMap[0][0];
+            }
+
+
+
+                // if the row [i] is the first/top [0], wrap around to the last/bottom [gh] 
+                // if the row [i] is the last/bottom [gh], wrap around to the first/top [0]
+
+                // if the column [j] is the first/left [0], wrap around to the last/right [gw] 
+                // if the column [j] is the last/right [gw], wrap around to the first/left [0] 
+
+
+
+            // if both column and row are either first or last/top or bottom, other rules apply
+
+            /*
             nb[0] = (i-1 < 0 || j-1 < 0) ? 0 : cellMap[i-1][j-1]; // NW
             nb[1] = (i-1 < 0) ? 0 : cellMap[i-1][j]; // N
             nb[2] = (i-1 < 0 || j+1 > gw) ? 0 : cellMap[i-1][j+1]; // NE
@@ -50,7 +132,8 @@ void update() {
             nb[5] = (i+1 > gh || j-1 < 0) ? 0 : cellMap[i+1][j-1]; // SW
             nb[6] = (i+1 > gh) ? 0 : cellMap[i+1][j]; // S
             nb[7] = (i+1 > gh || j+1 > gw) ? 0 : cellMap[i+1][j+1]; //SE
-            
+            */
+
             // check for the number of live neighbours!
             int nbno = std::accumulate(std::begin(nb), std::end(nb), 0);
             //std::cout << nbno << std::endl;
