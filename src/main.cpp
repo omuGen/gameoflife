@@ -2,6 +2,13 @@
 #include <SDL2/SDL.h>
 #include <numeric>
 
+// TODO wraparound
+// TODO click cells on/off with mouse
+// TODO draw with mouse
+// TODO different randomizer
+// TODO pause game
+// TODO template library
+
 // TODO why only square grids???
 const int CELL_SIZE = 8; // incl. +2 for the bottom + right borders
 const int GRID_HEIGHT = 128; // 768/8
@@ -140,8 +147,6 @@ int main() {
             startTicks = currentTicks;
         }
     }
-
-    //SDL_Delay(5000);
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
