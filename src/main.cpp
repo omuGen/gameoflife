@@ -29,21 +29,65 @@ void initialize() {
     }
 }
 
+//initialize grid
+void initializeEmpty() {
+    for (int i = 0; i < GRID_WIDTH; ++i) {
+        for (int j = 0; j < GRID_HEIGHT; ++j) {
+            cellMap[i][j] = 0;
+        }
+    }
+}
+
+
+int mouseX;
+int mouseY;
+bool mouseButtonDown = false;
+
+void HandleMouseMotion(SDL_MouseMotionEvent& Event) {
+    //std::cout << "Mouse moved." << std::endl;
+    mouseX = Event.x;
+    mouseY = Event.y;
+    if (mouseButtonDown == true) {
+        int cellX = mouseX/CELL_SIZE;
+        int cellY = mouseY/CELL_SIZE;
+        cellMap[cellX][cellY] = 1;
+    }
+}
+
+void HandleMouseClick(SDL_MouseButtonEvent& Event) {
+    if (Event.type == SDL_MOUSEBUTTONDOWN) {
+        std::cout << "Left MB pressed." << std::endl;
+        mouseButtonDown = true;
+    } else if (Event.type == SDL_MOUSEBUTTONUP) {
+        std::cout << "Left MB released." << std::endl;
+        mouseButtonDown = false;
+    }
+
+}
+
 // update
 void update() {
 
     // local vars for grid height and width
     int gw = GRID_WIDTH;
     int gh = GRID_HEIGHT;
-    int cols = GRID_WIDTH;
-    int rows = GRID_HEIGHT;
 
     // check the status of each cell and apply the rules
-    for (int i = 0; i < rows; ++i) {
-        for (int j = 0; j < cols; ++j) {
+    for (int i = 0; i < GRID_WIDTH; ++i) {
+        for (int j = 0; j < GRID_HEIGHT; ++j) {
             // get the values of the surrounding cells in a new array
             bool nb[8]; // = {0,0,0,0,0,0,0,0}; // only 8 neighbouring cells, middle cell is occupied
-/*
+          
+            nb[0] = cellMap[(i-1) % gw][(j-1) % gh]; // NW
+            nb[1] = cellMap[i % gw][(j-1) % gh]; // N
+            nb[2] = cellMap[(i+1) % gw][(j-1) % gh]; // NE
+            nb[3] = cellMap[(i-1) % gw][j % gh]; // W
+            nb[4] = cellMap[(i+1) % gw][j % gh]; // E
+            nb[5] = cellMap[(i-1) % gw][(j+1) % gh]; // SW
+            nb[6] = cellMap[i % gw][(j+1) % gh]; // S
+            nb[7] = cellMap[(i+1) % gw][(j+1) % gh]; // SE
+
+            /*
             nb[0] = cellMap[(i-1)%gh][(j-1)%gw]; // NW
             nb[1] = cellMap[(i-1)%gh][j%gw];   // N
             nb[2] = cellMap[(i-1)%gh][(j+1)%gw]; // NE
@@ -53,15 +97,6 @@ void update() {
             nb[6] = cellMap[(i+1)%gh][j%gw];   // S
             nb[7] = cellMap[(i+1)%gh][(j+1)%gw]; // SE
             */
-
-            nb[0] = cellMap[(i-1)%gh][(j-1)%gw]; // NW
-            nb[1] = cellMap[(i-1)%gh][j%gw];   // N
-            nb[2] = cellMap[(i-1)%gh][(j+1)%gw]; // NE
-            nb[3] = cellMap[i%gh][(j-1)%gw];   // W
-            nb[4] = cellMap[i%gh][(j+1)%gw];   // E
-            nb[5] = cellMap[(i+1)%gh][(j-1)%gw]; // SW
-            nb[6] = cellMap[(i+1)%gh][j%gw];   // S
-            nb[7] = cellMap[(i+1)%gh][(j+1)%gw]; // SE
 
             /*
             int wrap = 0;
@@ -176,6 +211,7 @@ void update() {
                 }
                 // if it's still alive here, it stays alive
             } else if (cellMap[i][j] == 0) {
+                newCellMap[i][j] = 0;
                 // if it's dead and has exactly three neighbours, it comes alive!
                 if (nbno == 3) {
                     newCellMap[i][j] = 1;
@@ -184,8 +220,8 @@ void update() {
         }
     }
     // replace cellMap with updated newCellMap
-    for (int i = 0; i < GRID_HEIGHT; ++i) {
-        for (int j = 0; j < GRID_WIDTH; ++j) {
+    for (int i = 0; i < GRID_WIDTH; ++i) {
+        for (int j = 0; j < GRID_HEIGHT; ++j) {
             cellMap[i][j] = newCellMap[i][j];
         }
     }
@@ -239,7 +275,7 @@ int main() {
             if (Event.type == SDL_KEYUP) {
                 //std::cout << "Key: " << Event.key.keysym.sym << std::endl;
                 // 'P' for pause
-                if (Event.key.keysym.sym == SDLK_p) {
+                if (Event.key.keysym.sym == SDLK_SPACE) {
                     if (!paused) {
                         std::cout << "Game paused." << std::endl;
                         paused = true;
@@ -249,12 +285,12 @@ int main() {
                     }
                 }
                 // 'f' for faster
-                if (Event.key.keysym.sym == SDLK_f) {
+                if (Event.key.keysym.sym == SDLK_f || Event.key.keysym.sym == SDLK_KP_PLUS) {
                     std::cout << "Speed increased." << std::endl;
                     updateInterval -= 10;
                 }
                 // 's' for slower
-                if (Event.key.keysym.sym == SDLK_s) {
+                if (Event.key.keysym.sym == SDLK_s || Event.key.keysym.sym == SDLK_KP_MINUS) {
                     std::cout << "Speed decreased." << std::endl;
                     updateInterval += 10;
                 }
@@ -263,20 +299,27 @@ int main() {
                     std::cout << "Restarted." << std::endl;
                     initialize();
                 }
+                // 'c' to clear
+                if (Event.key.keysym.sym == SDLK_c) {
+                    std::cout << "Cleared." << std::endl;
+                    initializeEmpty();
+                }                
+            }
+            //mouse events
+            if (Event.type == SDL_MOUSEMOTION) {
+                HandleMouseMotion(Event.motion);
+            }
+            if (Event.type == SDL_MOUSEBUTTONDOWN || Event.type == SDL_MOUSEBUTTONUP) {
+                HandleMouseClick(Event.button);
             }
         }
-        // refresh the current tick count since the game started        
-        ticksNow = SDL_GetTicks();
-        // only update once per updateInterval
-        if (((ticksNow - ticksUpdate) > updateInterval) && !paused) {
-            // update live/dead status for all cells
-            update();
+
             // set color to black and color everything
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
             SDL_RenderClear(renderer);
             // attempt to draw the grid
-            for (int i = 0; i < GRID_HEIGHT; ++i) {
-                for (int j = 0; j < GRID_WIDTH; ++j) {
+            for (int i = 0; i < GRID_WIDTH; ++i) {
+                for (int j = 0; j < GRID_HEIGHT; ++j) {
                     if (cellMap[i][j] == 1) {
                         SDL_Rect rect = {
                             i*CELL_SIZE, // x
@@ -293,6 +336,14 @@ int main() {
             }
             // present the rendered grid to the window
             SDL_RenderPresent(renderer);
+
+        // refresh the current tick count since the game started        
+        ticksNow = SDL_GetTicks();
+        // only update once per updateInterval
+        if (((ticksNow - ticksUpdate) > updateInterval) && !paused) {
+            // update live/dead status for all cells
+            update();
+
             // record time of this update
             ticksUpdate = SDL_GetTicks();
         }
