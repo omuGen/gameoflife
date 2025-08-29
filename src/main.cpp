@@ -16,26 +16,29 @@ const int GRID_HEIGHT = 96; // 1024/8
 const int WINDOW_WIDTH = (GRID_WIDTH*CELL_SIZE);
 const int WINDOW_HEIGHT = (GRID_HEIGHT*CELL_SIZE);
 
-int cellMap[GRID_WIDTH][GRID_HEIGHT];
+// TODO bug with specific cells being alive after initialization
+// #DONE switched cellMap type from int to bool!
+bool cellMap[GRID_WIDTH][GRID_HEIGHT]{};
 // create a new Cell Map for storing the updated values
-int newCellMap[GRID_WIDTH][GRID_HEIGHT];
+bool newCellMap[GRID_WIDTH][GRID_HEIGHT]{};
 
 //initialize grid
 void initialize() {
     for (int i = 0; i < GRID_WIDTH; ++i) {
         for (int j = 0; j < GRID_HEIGHT; ++j) {
-            cellMap[i][j] = rand() % 100 > 50;
+            cellMap[i][j] = rand() % 100 > 50 ? 0 : 1;
         }
     }
 }
 
 //initialize grid
 void initializeEmpty() {
-    for (int i = 0; i < GRID_WIDTH; ++i) {
-        for (int j = 0; j < GRID_HEIGHT; ++j) {
-            cellMap[i][j] = 0;
-        }
-    }
+
+    // for (int i = 0; i < GRID_WIDTH; ++i) {
+    //     for (int j = 0; j < GRID_HEIGHT; ++j) {
+    //         cellMap[i][j] = 0;
+    //     }
+    // }
 }
 
 
@@ -58,6 +61,9 @@ void HandleMouseClick(SDL_MouseButtonEvent& Event) {
     if (Event.type == SDL_MOUSEBUTTONDOWN) {
         std::cout << "Left MB pressed." << std::endl;
         mouseButtonDown = true;
+        int cellX = mouseX/CELL_SIZE;
+        int cellY = mouseY/CELL_SIZE;
+        cellMap[cellX][cellY] = 1;
     } else if (Event.type == SDL_MOUSEBUTTONUP) {
         std::cout << "Left MB released." << std::endl;
         mouseButtonDown = false;
@@ -87,120 +93,11 @@ void update() {
             nb[6] = cellMap[i % gw][(j+1) % gh]; // S
             nb[7] = cellMap[(i+1) % gw][(j+1) % gh]; // SE
 
-            /*
-            nb[0] = cellMap[(i-1)%gh][(j-1)%gw]; // NW
-            nb[1] = cellMap[(i-1)%gh][j%gw];   // N
-            nb[2] = cellMap[(i-1)%gh][(j+1)%gw]; // NE
-            nb[3] = cellMap[i%gh][(j-1)%gw];   // W
-            nb[4] = cellMap[i%gh][(j+1)%gw];   // E
-            nb[5] = cellMap[(i+1)%gh][(j-1)%gw]; // SW
-            nb[6] = cellMap[(i+1)%gh][j%gw];   // S
-            nb[7] = cellMap[(i+1)%gh][(j+1)%gw]; // SE
-            */
-
-            /*
-            int wrap = 0;
-
-            // assign cellMap neighbours values to neighbours array
-            // this assumes that out of bounds cells are dead
-            if (i != 0 && j != 0 && i != gh && j != gw) {
-                // if neither column nor row are first or last/top or bottom, normal rules apply
-                nb[0] = cellMap[i-1][j-1]; // NW
-                nb[1] = cellMap[i-1][j];   // N
-                nb[2] = cellMap[i-1][j+1]; // NE
-                nb[3] = cellMap[i][j-1];   // W
-                nb[4] = cellMap[i][j+1];   // E
-                nb[5] = cellMap[i+1][j-1]; // SW
-                nb[6] = cellMap[i+1][j];   // S
-                nb[7] = cellMap[i+1][j+1]; // SE
-            } else if (i == 0 && (j != 0 && j != gw)) {
-                // wrap row from top to bottom
-                int wrapToBottom = gh + 1;
-                nb[0] = cellMap[wrapToBottom+i-1][j-1]; // NW
-                nb[1] = cellMap[wrapToBottom+i-1][j];   // N
-                nb[2] = cellMap[wrapToBottom+i-1][j+1]; // NE
-                nb[3] = cellMap[i][j-1];   // W
-                nb[4] = cellMap[i][j+1];   // E
-                nb[5] = cellMap[i+1][j-1]; // SW
-                nb[6] = cellMap[i+1][j];   // S
-                nb[7] = cellMap[i+1][j+1]; // SE
-            } else if (i == gh && (j != 0 && j != gw)) {
-                // wrap row from bottom to top
-                int wrapToTop = -gh + 1;                
-                nb[0] = cellMap[i-1][j-1]; // NW
-                nb[1] = cellMap[i-1][j];   // N
-                nb[2] = cellMap[i-1][j+1]; // NE
-                nb[3] = cellMap[i][j-1];   // W
-                nb[4] = cellMap[i][j+1];   // E
-                nb[5] = cellMap[wrapToTop+i+1][j-1]; // SW
-                nb[6] = cellMap[wrapToTop+i+1][j];   // S
-                nb[7] = cellMap[wrapToTop+i+1][j+1]; // SE
-            } else if (j == 0 && (i != 0 && i != gh)) {
-                // wrap row from the left column to the right
-                int wrapToRight = gw + 1;
-                nb[0] = cellMap[i-1][wrapToRight+j-1]; // NW
-                nb[1] = cellMap[i-1][j];   // N
-                nb[2] = cellMap[i-1][j+1]; // NE
-                nb[3] = cellMap[i][wrapToRight+j-1];   // W
-                nb[4] = cellMap[i][j+1];   // E
-                nb[5] = cellMap[i+1][wrapToRight+j-1]; // SW
-                nb[6] = cellMap[i+1][j];   // S
-                nb[7] = cellMap[i+1][j+1]; // SE
-            } else if (j == gw && (i != 0 && i != gh)) {
-                // wrap from the right colum to the left
-                int wrapToLeft = -gw + 1;
-                nb[0] = cellMap[i-1][j-1]; // NW
-                nb[1] = cellMap[i-1][j];   // N
-                nb[2] = cellMap[i-1][wrapToLeft+j+1]; // NE
-                nb[3] = cellMap[i][j-1];   // W
-                nb[4] = cellMap[i][wrapToLeft+j+1];   // E
-                nb[5] = cellMap[i+1][j-1]; // SW
-                nb[6] = cellMap[i+1][j];   // S
-                nb[7] = cellMap[i+1][wrapToLeft+j+1]; // SE                
-            }
-            if (i == 0 && j == 0) {
-                nb[0] = cellMap[gh][gw];
-            }
-            if (i == 0 && j == gw) {
-                nb[2] = cellMap[gh][0];
-            }
-            if (i == gh && j == 0) {
-                nb[5] = cellMap[0][gw];
-            }
-            if (i == gh && j == gw) {
-                nb[7] = cellMap[0][0];
-            }
-            */
-
-
-                // if the row [i] is the first/top [0], wrap around to the last/bottom [gh] 
-                // if the row [i] is the last/bottom [gh], wrap around to the first/top [0]
-
-                // if the column [j] is the first/left [0], wrap around to the last/right [gw] 
-                // if the column [j] is the last/right [gw], wrap around to the first/left [0] 
-
-
-
-            // if both column and row are either first or last/top or bottom, other rules apply
-
-            /*
-            nb[0] = (i-1 < 0 || j-1 < 0) ? 0 : cellMap[i-1][j-1]; // NW
-            nb[1] = (i-1 < 0) ? 0 : cellMap[i-1][j]; // N
-            nb[2] = (i-1 < 0 || j+1 > gw) ? 0 : cellMap[i-1][j+1]; // NE
-            nb[3] = (j-1 < 0) ? 0 : cellMap[i][j-1]; // W
-            nb[4] = (j+1 > gw) ? 0 : cellMap[i][j+1]; // E
-            nb[5] = (i+1 > gh || j-1 < 0) ? 0 : cellMap[i+1][j-1]; // SW
-            nb[6] = (i+1 > gh) ? 0 : cellMap[i+1][j]; // S
-            nb[7] = (i+1 > gh || j+1 > gw) ? 0 : cellMap[i+1][j+1]; //SE
-            */
-
             // check for the number of live neighbours!
             int nbno = std::accumulate(std::begin(nb), std::end(nb), 0);
             //std::cout << nbno << std::endl;
             // apply the rules according to the number of neighbours
             if (cellMap[i][j] == 1) {
-                // set the new cell to alive if the old cell was alive
-                newCellMap[i][j] = 1;
                 // check for death conditions
                 if (nbno < 2) {
                     // each live cell with less than two neighbours dies
@@ -208,13 +105,17 @@ void update() {
                 } else if (nbno > 3) {
                     // each live cell with more than three neighbours dies
                     newCellMap[i][j] = 0;
+                } else {
+                    // set the new cell to alive if the old cell was alive
+                    newCellMap[i][j] = 1;
                 }
                 // if it's still alive here, it stays alive
             } else if (cellMap[i][j] == 0) {
-                newCellMap[i][j] = 0;
                 // if it's dead and has exactly three neighbours, it comes alive!
                 if (nbno == 3) {
                     newCellMap[i][j] = 1;
+                } else {
+                    newCellMap[i][j] = 0;
                 }
             }
         }
@@ -248,10 +149,9 @@ int main() {
 
     //bool active = true; // TODO do i need this?
     SDL_Event Event;
-    // prime the randomizer
-    srand(time(0));
-    //CellGrid grid;
-    initialize();
+
+    SDL_Rect rect;
+
     // number of ticks since the start of the game
     Uint32 ticksStart = SDL_GetTicks();
     // number of ticks at the time of the last update
@@ -260,8 +160,11 @@ int main() {
     Uint32 ticksNow = ticksStart;
     // update after how many miliseconds
     float updateInterval = 100;
-
     bool paused = false;
+    // prime the randomizer
+    //srand(time(0));
+    //CellGrid grid;
+    //initializeEmpty();
 
     // main loop
     while (true) {
@@ -314,39 +217,32 @@ int main() {
             }
         }
 
-            // set color to black and color everything
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-            SDL_RenderClear(renderer);
-            // attempt to draw the grid
-            for (int i = 0; i < GRID_WIDTH; ++i) {
-                for (int j = 0; j < GRID_HEIGHT; ++j) {
-                    if (cellMap[i][j] == 1) {
-                        SDL_Rect rect = {
-                            i*CELL_SIZE, // x
-                            j*CELL_SIZE, // y
-                            CELL_SIZE-2, // w
-                            CELL_SIZE-2  // h
-                        };
-                        // set color to white
-                        SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-                        SDL_RenderDrawRect(renderer, &rect);
-                        SDL_RenderFillRect(renderer, &rect);
-                    }
-                }
-            }
-            // present the rendered grid to the window
-            SDL_RenderPresent(renderer);
-
         // refresh the current tick count since the game started        
         ticksNow = SDL_GetTicks();
         // only update once per updateInterval
         if (((ticksNow - ticksUpdate) > updateInterval) && !paused) {
             // update live/dead status for all cells
             update();
-
             // record time of this update
             ticksUpdate = SDL_GetTicks();
         }
+        // set color to black and color everything
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+        SDL_RenderClear(renderer);
+        // attempt to draw the grid
+        for (int i = 0; i < GRID_WIDTH; ++i) {
+            for (int j = 0; j < GRID_HEIGHT; ++j) {
+                if (cellMap[i][j] == 1) {
+                    rect = {i*CELL_SIZE, j*CELL_SIZE, CELL_SIZE-2, CELL_SIZE-2};
+                    // set color to white
+                    SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+                    SDL_RenderDrawRect(renderer, &rect);
+                    SDL_RenderFillRect(renderer, &rect);
+                }
+            }
+        }
+        // present the rendered grid to the window
+        SDL_RenderPresent(renderer);
     }
     // clean up
     SDL_DestroyRenderer(renderer);
