@@ -75,7 +75,7 @@ void update() {
             }
         }
     }
-    // NOW we have a newCellMap ready to render
+    // replace cellMap with updated newCellMap
     for (int i = 0; i < GRID_HEIGHT; ++i) {
         for (int j = 0; j < GRID_WIDTH; ++j) {
             cellMap[i][j] = newCellMap[i][j];
@@ -102,16 +102,20 @@ int main() {
         return 1;
     }
 
-    bool active = true;
+    bool active = true; // TODO do i need this?
     SDL_Event event;
-
+    // prime the randomizer
     srand(time(0));
     //CellGrid grid;
     initialize();
-
-    Uint32 startTicks = SDL_GetTicks();
-
-    float updateInterval = 0.2f; //in seconds
+    // number of ticks since the start of the game
+    Uint32 ticksStart = SDL_GetTicks();
+    // number of ticks at the time of the last update
+    Uint32 ticksUpdate = 0;
+    // number of ticks elapsed right now
+    Uint32 ticksNow = ticksStart;
+    // update after how many miliseconds
+    float updateInterval = 500;
 
     // main loop
     while (active) {
@@ -121,11 +125,11 @@ int main() {
                 break;
             }
         }
-        // wait a sec...
-        //SDL_Delay(100); //TODO this causes freezes?
-        
-        Uint32 currentTicks = SDL_GetTicks();
-        if ((currentTicks - startTicks) / 1000.0f >= updateInterval) {
+        // refresh the current tick count since the game started        
+        ticksNow = SDL_GetTicks();
+        // only update once per updateInterval
+        if ((ticksNow - ticksUpdate) > updateInterval) {
+            // update live/dead status for all cells
             update();
             // set color to black and color everything
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
@@ -134,7 +138,12 @@ int main() {
             for (int i = 0; i < GRID_HEIGHT; ++i) {
                 for (int j = 0; j < GRID_WIDTH; ++j) {
                     if (cellMap[i][j] == 1) {
-                        SDL_Rect rect = {i*CELL_SIZE,j*CELL_SIZE,CELL_SIZE-2,CELL_SIZE-2};
+                        SDL_Rect rect = {
+                            i*CELL_SIZE, // x
+                            j*CELL_SIZE, // y
+                            CELL_SIZE-2, // w
+                            CELL_SIZE-2  // h
+                        };
                         // set color to white
                         SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
                         SDL_RenderDrawRect(renderer, &rect);
@@ -144,10 +153,11 @@ int main() {
             }
             // present the rendered grid to the window
             SDL_RenderPresent(renderer);
-            startTicks = currentTicks;
+            // record time of this update
+            ticksUpdate = SDL_GetTicks();
         }
     }
-
+    // clean up
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
