@@ -102,8 +102,8 @@ int main() {
         return 1;
     }
 
-    bool active = true; // TODO do i need this?
-    SDL_Event event;
+    //bool active = true; // TODO do i need this?
+    SDL_Event Event;
     // prime the randomizer
     srand(time(0));
     //CellGrid grid;
@@ -115,20 +115,35 @@ int main() {
     // number of ticks elapsed right now
     Uint32 ticksNow = ticksStart;
     // update after how many miliseconds
-    float updateInterval = 500;
+    float updateInterval = 100;
+
+    bool paused = false;
 
     // main loop
-    while (active) {
+    while (true) {
         // check for events
-        if (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
+        if (SDL_PollEvent(&Event)) {
+            // handle events
+            if (Event.type == SDL_QUIT) {
                 break;
+            }
+            if (Event.type == SDL_KEYUP) {
+                std::cout << "Key: " << Event.key.keysym.sym << std::endl;
+                if (Event.key.keysym.sym == SDLK_p) {
+                    if (!paused) {
+                        std::cout << "Game paused." << std::endl;
+                        paused = true;
+                    } else {
+                        std::cout << "Game resumed." << std::endl;
+                        paused = false;                        
+                    }
+                }
             }
         }
         // refresh the current tick count since the game started        
         ticksNow = SDL_GetTicks();
         // only update once per updateInterval
-        if ((ticksNow - ticksUpdate) > updateInterval) {
+        if (((ticksNow - ticksUpdate) > updateInterval) && !paused) {
             // update live/dead status for all cells
             update();
             // set color to black and color everything
