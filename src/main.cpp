@@ -23,7 +23,7 @@ bool cellMap[GRID_WIDTH][GRID_HEIGHT]{};
 bool newCellMap[GRID_WIDTH][GRID_HEIGHT]{};
 
 //initialize grid
-void initialize() {
+void initrandom() {
     for (int i = 0; i < GRID_WIDTH; ++i) {
         for (int j = 0; j < GRID_HEIGHT; ++j) {
             cellMap[i][j] = rand() % 100 > 50 ? 0 : 1;
@@ -31,44 +31,49 @@ void initialize() {
     }
 }
 
-//initialize grid
-void initializeEmpty() {
-
-    // for (int i = 0; i < GRID_WIDTH; ++i) {
-    //     for (int j = 0; j < GRID_HEIGHT; ++j) {
-    //         cellMap[i][j] = 0;
-    //     }
-    // }
+// clear grid
+void initclear() {
+    for (int i = 0; i < GRID_WIDTH; ++i) {
+        for (int j = 0; j < GRID_HEIGHT; ++j) {
+            cellMap[i][j] = 0;
+        }
+    }
 }
 
 
-int mouseX;
-int mouseY;
-bool mouseButtonDown = false;
+short mouseX;
+short mouseY;
+bool leftMouseButtonDown = false;
+bool rightMouseButtonDown = false;
 
 void HandleMouseMotion(SDL_MouseMotionEvent& Event) {
-    //std::cout << "Mouse moved." << std::endl;
-    mouseX = Event.x;
-    mouseY = Event.y;
-    if (mouseButtonDown == true) {
-        int cellX = mouseX/CELL_SIZE;
-        int cellY = mouseY/CELL_SIZE;
+    int cellX = Event.x/CELL_SIZE;
+    int cellY = Event.y/CELL_SIZE;
+    if (leftMouseButtonDown == true) {
         cellMap[cellX][cellY] = 1;
+    } else if (rightMouseButtonDown == true) {
+        cellMap[cellX][cellY] = 0;
     }
 }
 
 void HandleMouseClick(SDL_MouseButtonEvent& Event) {
     if (Event.type == SDL_MOUSEBUTTONDOWN) {
-        std::cout << "Left MB pressed." << std::endl;
-        mouseButtonDown = true;
         int cellX = mouseX/CELL_SIZE;
         int cellY = mouseY/CELL_SIZE;
-        cellMap[cellX][cellY] = 1;
+        if (Event.button == SDL_BUTTON_LEFT) {
+            leftMouseButtonDown = true;
+            cellMap[cellX][cellY] = 1;
+        } else if (Event.button == SDL_BUTTON_RIGHT) {
+            rightMouseButtonDown = true;
+            cellMap[cellX][cellY] = 0;
+        }
     } else if (Event.type == SDL_MOUSEBUTTONUP) {
-        std::cout << "Left MB released." << std::endl;
-        mouseButtonDown = false;
+        if (Event.button == SDL_BUTTON_LEFT) {
+            leftMouseButtonDown = false;
+        } else if (Event.button == SDL_BUTTON_RIGHT) {
+            rightMouseButtonDown = false;
+        }
     }
-
 }
 
 // update
@@ -159,12 +164,12 @@ int main() {
     // number of ticks elapsed right now
     Uint32 ticksNow = ticksStart;
     // update after how many miliseconds
-    float updateInterval = 100;
+    float updateInterval = 200;
     bool paused = false;
     // prime the randomizer
     //srand(time(0));
     //CellGrid grid;
-    //initializeEmpty();
+    initrandom();
 
     // main loop
     while (true) {
@@ -200,12 +205,12 @@ int main() {
                 // 'r' for restart
                 if (Event.key.keysym.sym == SDLK_r) {
                     std::cout << "Restarted." << std::endl;
-                    initialize();
+                    initrandom();
                 }
                 // 'c' to clear
                 if (Event.key.keysym.sym == SDLK_c) {
                     std::cout << "Cleared." << std::endl;
-                    initializeEmpty();
+                    initclear();
                 }                
             }
             //mouse events
