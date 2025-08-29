@@ -11,19 +11,19 @@
 
 // TODO why only square grids???
 const int CELL_SIZE = 8; // incl. +2 for the bottom + right borders
-const int GRID_HEIGHT = 128; // 768/8
 const int GRID_WIDTH = 128; // 1024/8
-const int WINDOW_HEIGHT = (GRID_HEIGHT*CELL_SIZE);
+const int GRID_HEIGHT = 96; // 1024/8
 const int WINDOW_WIDTH = (GRID_WIDTH*CELL_SIZE);
+const int WINDOW_HEIGHT = (GRID_HEIGHT*CELL_SIZE);
 
-int cellMap[GRID_HEIGHT][GRID_WIDTH];
+int cellMap[GRID_WIDTH][GRID_HEIGHT];
 // create a new Cell Map for storing the updated values
-int newCellMap[GRID_HEIGHT][GRID_WIDTH];
+int newCellMap[GRID_WIDTH][GRID_HEIGHT];
 
 //initialize grid
 void initialize() {
-    for (int i = 0; i < GRID_HEIGHT; ++i) {
-        for (int j = 0; j < GRID_WIDTH; ++j) {
+    for (int i = 0; i < GRID_WIDTH; ++i) {
+        for (int j = 0; j < GRID_HEIGHT; ++j) {
             cellMap[i][j] = rand() % 100 > 50;
         }
     }
@@ -31,15 +31,40 @@ void initialize() {
 
 // update
 void update() {
+
+    // local vars for grid height and width
+    int gw = GRID_WIDTH;
+    int gh = GRID_HEIGHT;
+    int cols = GRID_WIDTH;
+    int rows = GRID_HEIGHT;
+
     // check the status of each cell and apply the rules
-    for (int i = 0; i < GRID_HEIGHT; ++i) {
-        for (int j = 0; j < GRID_WIDTH; ++j) {
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
             // get the values of the surrounding cells in a new array
-            bool nb[8] = {0,0,0,0,0,0,0,0}; // only 8 neighbouring cells, middle cell is occupied
-            
-            // local vars for grid height and width
-            int gh = GRID_HEIGHT-1;
-            int gw = GRID_WIDTH-1;
+            bool nb[8]; // = {0,0,0,0,0,0,0,0}; // only 8 neighbouring cells, middle cell is occupied
+/*
+            nb[0] = cellMap[(i-1)%gh][(j-1)%gw]; // NW
+            nb[1] = cellMap[(i-1)%gh][j%gw];   // N
+            nb[2] = cellMap[(i-1)%gh][(j+1)%gw]; // NE
+            nb[3] = cellMap[i%gh][(j-1)%gw];   // W
+            nb[4] = cellMap[i%gh][(j+1)%gw];   // E
+            nb[5] = cellMap[(i+1)%gh][(j-1)%gw]; // SW
+            nb[6] = cellMap[(i+1)%gh][j%gw];   // S
+            nb[7] = cellMap[(i+1)%gh][(j+1)%gw]; // SE
+            */
+
+            nb[0] = cellMap[(i-1)%gh][(j-1)%gw]; // NW
+            nb[1] = cellMap[(i-1)%gh][j%gw];   // N
+            nb[2] = cellMap[(i-1)%gh][(j+1)%gw]; // NE
+            nb[3] = cellMap[i%gh][(j-1)%gw];   // W
+            nb[4] = cellMap[i%gh][(j+1)%gw];   // E
+            nb[5] = cellMap[(i+1)%gh][(j-1)%gw]; // SW
+            nb[6] = cellMap[(i+1)%gh][j%gw];   // S
+            nb[7] = cellMap[(i+1)%gh][(j+1)%gw]; // SE
+
+            /*
+            int wrap = 0;
 
             // assign cellMap neighbours values to neighbours array
             // this assumes that out of bounds cells are dead
@@ -110,7 +135,7 @@ void update() {
             if (i == gh && j == gw) {
                 nb[7] = cellMap[0][0];
             }
-
+            */
 
 
                 // if the row [i] is the first/top [0], wrap around to the last/bottom [gh] 
@@ -179,7 +204,7 @@ int main() {
         return 1;
     }
 
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (renderer == NULL) {
         printf("SDL_CreateRenderer Error: %s\n", SDL_GetError());
         return 1;
