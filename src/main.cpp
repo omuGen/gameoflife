@@ -2,14 +2,12 @@
 #include <SDL2/SDL.h>
 #include <numeric>
 
-const int WINDOW_WIDTH = 800;
-const int WINDOW_HEIGHT = 800;
-
-const int GRID_WIDTH = 100;
-const int GRID_HEIGHT = 100;
-
-const int CELL_HEIGHT = WINDOW_HEIGHT/GRID_HEIGHT;
-const int CELL_WIDTH = WINDOW_WIDTH/GRID_WIDTH;
+// TODO why only square grids???
+const int CELL_SIZE = 8; // incl. +2 for the bottom + right borders
+const int GRID_HEIGHT = 128; // 768/8
+const int GRID_WIDTH = 128; // 1024/8
+const int WINDOW_HEIGHT = (GRID_HEIGHT*CELL_SIZE);
+const int WINDOW_WIDTH = (GRID_WIDTH*CELL_SIZE);
 
 int cellMap[GRID_HEIGHT][GRID_WIDTH];
 // create a new Cell Map for storing the updated values
@@ -129,7 +127,7 @@ int main() {
             for (int i = 0; i < GRID_HEIGHT; ++i) {
                 for (int j = 0; j < GRID_WIDTH; ++j) {
                     if (cellMap[i][j] == 1) {
-                        SDL_Rect rect = {i*CELL_HEIGHT,j*CELL_WIDTH,CELL_HEIGHT-2,CELL_WIDTH-2};
+                        SDL_Rect rect = {i*CELL_SIZE,j*CELL_SIZE,CELL_SIZE-2,CELL_SIZE-2};
                         // set color to white
                         SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
                         SDL_RenderDrawRect(renderer, &rect);
