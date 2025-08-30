@@ -51,33 +51,75 @@ short mouseY;
 bool leftMouseButtonDown = false;
 bool rightMouseButtonDown = false;
 
-void HandleMouseMotion(SDL_MouseMotionEvent& Event) {
-    int cellX = Event.x/CELL_SIZE;
-    int cellY = Event.y/CELL_SIZE;
-    if (leftMouseButtonDown == true) {
-        cellMap[cellX][cellY] = 1;
-    } else if (rightMouseButtonDown == true) {
-        cellMap[cellX][cellY] = 0;
+// update after how many miliseconds
+float updateInterval = 200;
+bool paused = false;
+
+// TODO rework the manpulation of the cell map
+// mouse event handlers
+void HandleMouseMotion(SDL_MouseMotionEvent& event) {
+    if (event.state == SDL_BUTTON_LEFT) {
+        cellMap[event.x/CELL_SIZE][event.y/CELL_SIZE] = 1;
+    } else if (event.state == SDL_BUTTON_RIGHT) {
+        cellMap[event.x/CELL_SIZE][event.y/CELL_SIZE] = 0;
+    }
+}
+void HandleMouseButton(SDL_MouseButtonEvent& event) {
+    if (event.button == SDL_BUTTON_LEFT) {
+        if (event.state == SDL_PRESSED) {
+            cellMap[event.x/CELL_SIZE][event.y/CELL_SIZE] = 1;
+        } else if (event.state == SDL_RELEASED) {
+            // do nothing
+        }
+    } else if (event.button == SDL_BUTTON_RIGHT) {
+        if (event.state == SDL_PRESSED) {
+            cellMap[event.x/CELL_SIZE][event.y/CELL_SIZE] = 0;
+        } else if (event.state == SDL_RELEASED) {
+            // do nothing
+        }
     }
 }
 
-void HandleMouseClick(SDL_MouseButtonEvent& Event) {
-    if (Event.type == SDL_MOUSEBUTTONDOWN) {
-        int cellX = mouseX/CELL_SIZE;
-        int cellY = mouseY/CELL_SIZE;
-        if (Event.button == SDL_BUTTON_LEFT) {
-            leftMouseButtonDown = true;
-            cellMap[cellX][cellY] = 1;
-        } else if (Event.button == SDL_BUTTON_RIGHT) {
-            rightMouseButtonDown = true;
-            cellMap[cellX][cellY] = 0;
+void HandleEvents(SDL_Event& event) {
+    // keyup events
+    if (event.type == SDL_KEYUP) {
+        // 'space' for pause
+        if (event.key.keysym.sym == SDLK_SPACE) {
+            if (!paused) {
+                std::cout << "Game paused." << std::endl;
+                paused = true;
+            } else {
+                std::cout << "Game resumed." << std::endl;
+                paused = false;                        
+            }
         }
-    } else if (Event.type == SDL_MOUSEBUTTONUP) {
-        if (Event.button == SDL_BUTTON_LEFT) {
-            leftMouseButtonDown = false;
-        } else if (Event.button == SDL_BUTTON_RIGHT) {
-            rightMouseButtonDown = false;
+        // numpad '+' for faster
+        if (event.key.keysym.sym == SDLK_KP_PLUS) {
+            std::cout << "Speed increased." << std::endl;
+            updateInterval -= 10;
         }
+        // numpad '-' for slower
+        if (event.key.keysym.sym == SDLK_KP_MINUS) {
+            std::cout << "Speed decreased." << std::endl;
+            updateInterval += 10;
+        }
+        // 'r' for restart
+        if (event.key.keysym.sym == SDLK_r) {
+            std::cout << "Restarted." << std::endl;
+            initrandom();
+        }
+        // 'c' to clear
+        if (event.key.keysym.sym == SDLK_c) {
+            std::cout << "Cleared." << std::endl;
+            initclear();
+        }                
+    }
+    //mouse events
+    if (event.type == SDL_MOUSEMOTION) {
+        HandleMouseMotion(event.motion);
+    }
+    if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) {
+        HandleMouseButton(event.button);
     }
 }
 
@@ -168,9 +210,7 @@ int main() {
     Uint32 ticksUpdate = 0;
     // number of ticks elapsed right now
     Uint32 ticksNow = ticksStart;
-    // update after how many miliseconds
-    float updateInterval = 200;
-    bool paused = false;
+
     // prime the randomizer
     //srand(time(0));
     //CellGrid grid;
@@ -184,47 +224,7 @@ int main() {
             if (Event.type == SDL_QUIT) {
                 break;
             }
-            // keyup events
-            if (Event.type == SDL_KEYUP) {
-                //std::cout << "Key: " << Event.key.keysym.sym << std::endl;
-                // 'P' for pause
-                if (Event.key.keysym.sym == SDLK_SPACE) {
-                    if (!paused) {
-                        std::cout << "Game paused." << std::endl;
-                        paused = true;
-                    } else {
-                        std::cout << "Game resumed." << std::endl;
-                        paused = false;                        
-                    }
-                }
-                // 'f' for faster
-                if (Event.key.keysym.sym == SDLK_f || Event.key.keysym.sym == SDLK_KP_PLUS) {
-                    std::cout << "Speed increased." << std::endl;
-                    updateInterval -= 10;
-                }
-                // 's' for slower
-                if (Event.key.keysym.sym == SDLK_s || Event.key.keysym.sym == SDLK_KP_MINUS) {
-                    std::cout << "Speed decreased." << std::endl;
-                    updateInterval += 10;
-                }
-                // 'r' for restart
-                if (Event.key.keysym.sym == SDLK_r) {
-                    std::cout << "Restarted." << std::endl;
-                    initrandom();
-                }
-                // 'c' to clear
-                if (Event.key.keysym.sym == SDLK_c) {
-                    std::cout << "Cleared." << std::endl;
-                    initclear();
-                }                
-            }
-            //mouse events
-            if (Event.type == SDL_MOUSEMOTION) {
-                HandleMouseMotion(Event.motion);
-            }
-            if (Event.type == SDL_MOUSEBUTTONDOWN || Event.type == SDL_MOUSEBUTTONUP) {
-                HandleMouseClick(Event.button);
-            }
+            HandleEvents(Event);
         }
 
         // refresh the current tick count since the game started        
@@ -261,3 +261,4 @@ int main() {
 
     return 0;
 }
+
