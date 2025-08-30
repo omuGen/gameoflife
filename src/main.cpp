@@ -2,14 +2,16 @@
 #include <SDL2/SDL.h>
 #include <numeric>
 
-// TODO wraparound
-// TODO click cells on/off with mouse
-// TODO draw with mouse
+// TODO wraparound ! doesn't really work yet!
+// TODO DONE click cells on/off with mouse
+// TODO DONE draw with mouse
 // TODO different randomizer
-// TODO pause game
+// TODO DONE pause game
 // TODO template library
+// TODO mouse click & movement bug
+// TODO bug segfault when mouseout (while button pressed??)
 
-// TODO why only square grids???
+// TODO DONE fixed x/y issue - why only square grids???
 const int CELL_SIZE = 8; // incl. +2 for the bottom + right borders
 const int GRID_WIDTH = 128; // 1024/8
 const int GRID_HEIGHT = 96; // 1024/8
@@ -18,6 +20,7 @@ const int WINDOW_HEIGHT = (GRID_HEIGHT*CELL_SIZE);
 
 // TODO bug with specific cells being alive after initialization
 // #DONE switched cellMap type from int to bool!
+//bool (*p_currentMap)[GRID_HEIGHT];
 bool cellMap[GRID_WIDTH][GRID_HEIGHT]{};
 // create a new Cell Map for storing the updated values
 bool newCellMap[GRID_WIDTH][GRID_HEIGHT]{};
@@ -29,6 +32,7 @@ void initrandom() {
             cellMap[i][j] = rand() % 100 > 50 ? 0 : 1;
         }
     }
+    //p_currentMap = cellMap;
 }
 
 // clear grid
@@ -38,6 +42,7 @@ void initclear() {
             cellMap[i][j] = 0;
         }
     }
+    //p_currentMap = cellMap;
 }
 
 
@@ -87,7 +92,7 @@ void update() {
     for (int i = 0; i < GRID_WIDTH; ++i) {
         for (int j = 0; j < GRID_HEIGHT; ++j) {
             // get the values of the surrounding cells in a new array
-            bool nb[8]; // = {0,0,0,0,0,0,0,0}; // only 8 neighbouring cells, middle cell is occupied
+            bool nb[8]{}; // = {0,0,0,0,0,0,0,0}; // only 8 neighbouring cells, middle cell is occupied
           
             nb[0] = cellMap[(i-1) % gw][(j-1) % gh]; // NW
             nb[1] = cellMap[i % gw][(j-1) % gh]; // N
