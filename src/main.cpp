@@ -45,12 +45,6 @@ void initclear() {
     //p_currentMap = cellMap;
 }
 
-
-short mouseX;
-short mouseY;
-bool leftMouseButtonDown = false;
-bool rightMouseButtonDown = false;
-
 // update after how many miliseconds
 float updateInterval = 200;
 bool paused = false;
