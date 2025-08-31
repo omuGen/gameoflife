@@ -22,6 +22,8 @@ const long GRID_WIDTH = 128; // 1024/8
 const long GRID_HEIGHT = 96; // 768/8
 const int WINDOW_WIDTH = (GRID_WIDTH*CELL_SIZE);
 const int WINDOW_HEIGHT = (GRID_HEIGHT*CELL_SIZE);
+const int CELL_BORDER = 1;
+const bool DRAW_GRID = true;
 
 // #DONE TODO bug with specific cells being alive after initialization #switched cellMap type from int to bool!
 //bool (*p_currentMap)[GRID_HEIGHT];
@@ -127,6 +129,24 @@ void HandleEvents(SDL_Event& event) {
         HandleMouseButton(event.button);
     }
 }
+
+int GetNeighborCount(int i, int j) {
+    // get the values of the surrounding cells in a new array
+    bool nb[8] = {0,0,0,0,0,0,0,0}; // only 8 neighbouring cells, middle cell is occupied
+    // go around the clock and determine neighbors alive/dead status
+    nb[0] = cellMap[((i-1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j-1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
+    nb[1] = cellMap[((i % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j-1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
+    nb[2] = cellMap[((i+1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j-1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
+    nb[3] = cellMap[((i-1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
+    nb[4] = cellMap[((i+1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
+    nb[5] = cellMap[((i-1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j+1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
+    nb[6] = cellMap[((i % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j+1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
+    nb[7] = cellMap[((i+1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j+1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW           
+    // get the sum of the number of live neighbours
+    int nbno = std::accumulate(std::begin(nb), std::end(nb), 0);
+    return nbno;
+}
+
 
 // update
 void update() {
@@ -259,13 +279,34 @@ int main() {
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
         // inititalize backbuffer (to bgcolor)
         SDL_RenderClear(renderer);
-        // attempt to draw the grid
+        // draw a grid
+        if (DRAW_GRID == true) {
+            int x_offset = 0;
+            int y_offset = 0;
+            // set grid color
+            SDL_SetRenderDrawColor(renderer, 20, 20, 20, SDL_ALPHA_OPAQUE);
+            // draw vertical lines
+            for (int i = 0; i < GRID_WIDTH; ++i) {
+                SDL_RenderDrawLine(renderer, (i*CELL_SIZE)+x_offset, 0, (i*CELL_SIZE)+x_offset, GRID_HEIGHT*CELL_SIZE);
+            }
+            // draw horizontal lines
+            for (int i = 0; i < GRID_WIDTH; ++i) {
+                SDL_RenderDrawLine(renderer, 0, (i*CELL_SIZE)+y_offset, GRID_WIDTH*CELL_SIZE, (i*CELL_SIZE)+y_offset);
+            }            
+        }
+        // attempt to draw the cells
+        int cell_offset = 1;
         for (int i = 0; i < GRID_WIDTH; ++i) {
             for (int j = 0; j < GRID_HEIGHT; ++j) {
                 if (cellMap[i][j] == 1) {
-                    rect = {i*CELL_SIZE, j*CELL_SIZE, CELL_SIZE-2, CELL_SIZE-2};
+                    // set color based on no of neighbors
+                    auto nb = GetNeighborCount(i,j) + 1; //plus one to prevent 0 (scales from 1-9)
+                    int opacity = (nb*16) + 119;
+                    SDL_SetRenderDrawColor(renderer, opacity, opacity, opacity, SDL_ALPHA_OPAQUE);
+
+                    rect = {(i*CELL_SIZE)+cell_offset, (j*CELL_SIZE)+cell_offset, CELL_SIZE-CELL_BORDER, CELL_SIZE-CELL_BORDER};
                     // set color to white
-                    SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+                    //SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
                     SDL_RenderDrawRect(renderer, &rect);
                     SDL_RenderFillRect(renderer, &rect);
                 }
