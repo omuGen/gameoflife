@@ -14,6 +14,7 @@
 // #DONE TODO mouse click & movement bug #fixed properly (mousemotion event contains x/y info)
 // #DONE TODO bug segfault when mouseout (while button pressed??) #dunno how, but this disappeared
 // #DONE TODO Performance issues! How to track? #tracking with chrono, SDL_RENDERER_PRESENTVSYNC flag seems to have helped the fan problem
+// TODO implement other universes (rules other than B3/S23)
 
 // TODO DONE fixed x/y issue - why only square grids???
 const int CELL_SIZE = 8; // incl. +2 for the bottom + right borders
@@ -24,6 +25,11 @@ const int WINDOW_WIDTH = (GRID_WIDTH*CELL_SIZE);
 const int WINDOW_HEIGHT = (GRID_HEIGHT*CELL_SIZE);
 const int CELL_BORDER = 1;
 const bool DRAW_GRID = true;
+
+// update after how many miliseconds
+float updateInterval = 200;
+// start paused or unpaused
+bool paused = true;
 
 // #DONE TODO bug with specific cells being alive after initialization #switched cellMap type from int to bool!
 //bool (*p_currentMap)[GRID_HEIGHT];
@@ -50,10 +56,6 @@ void initclear() {
     }
     //p_currentMap = cellMap;
 }
-
-// update after how many miliseconds
-float updateInterval = 200;
-bool paused = false;
 
 // TODO rework the manpulation of the cell map
 // mouse event handlers
