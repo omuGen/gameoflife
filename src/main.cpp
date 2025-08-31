@@ -2,20 +2,22 @@
 #include <SDL2/SDL.h>
 #include <numeric>
 #include "CellMap.h"
+#include <chrono>
 
-// TODO wraparound ! doesn't really work yet!
-// TODO DONE click cells on/off with mouse
-// TODO DONE draw with mouse
+// #DONE wraparound ! doesn't really work yet! DONE Modulo problem!
+// #DONE TODO click cells on/off with mouse
+// #DONE TODO draw with mouse
 // TODO different randomizer
-// TODO DONE pause game
+// #DONE TODO pause game
 // TODO template library
-// TODO mouse click & movement bug
+// #DONE TODO mouse click & movement bug #fixed properly (mousemotion event contains x/y info)
 // TODO bug segfault when mouseout (while button pressed??)
+// TODO Performance issues! How to track?
 
 // TODO DONE fixed x/y issue - why only square grids???
 const int CELL_SIZE = 8; // incl. +2 for the bottom + right borders
-const long GRID_WIDTH = 128; // 1024/8
-const long GRID_HEIGHT = 96; // 1024/8
+const long GRID_WIDTH = 200; // 1024/8
+const long GRID_HEIGHT = 150; // 1024/8
 const int WINDOW_WIDTH = (GRID_WIDTH*CELL_SIZE);
 const int WINDOW_HEIGHT = (GRID_HEIGHT*CELL_SIZE);
 
@@ -125,52 +127,40 @@ void update() {
     int gw = GRID_WIDTH;
     int gh = GRID_HEIGHT;
 
+    // start time measurement
+    auto start = std::chrono::high_resolution_clock::now();
     // check the status of each cell and apply the rules
+    // main update logic loop
     for (int i = 0; i < GRID_WIDTH; ++i) {
         for (int j = 0; j < GRID_HEIGHT; ++j) {
             // get the values of the surrounding cells in a new array
-            bool nb[8]{}; // = {0,0,0,0,0,0,0,0}; // only 8 neighbouring cells, middle cell is occupied
-            /*
-            nb[0] = cellMap[(i-1) % gw][(j-1) % gh]; // NW
-            nb[1] = cellMap[i % gw][(j-1) % gh]; // N
-            nb[2] = cellMap[(i+1) % gw][(j-1) % gh]; // NE
-            nb[3] = cellMap[(i-1) % gw][j % gh]; // W
-            nb[4] = cellMap[(i+1) % gw][j % gh]; // E
-            nb[5] = cellMap[(i-1) % gw][(j+1) % gh]; // SW
-            nb[6] = cellMap[i % gw][(j+1) % gh]; // S
-            nb[7] = cellMap[(i+1) % gw][(j+1) % gh]; // SE
-            */
-           nb[0] = cellMap[((i-1 % gw) + gw) % gw][((j-1 % gh) + gh) % gh]; // NW
-           nb[1] = cellMap[((i % gw) + gw) % gw][((j-1 % gh) + gh) % gh]; // NW
-           nb[2] = cellMap[((i+1 % gw) + gw) % gw][((j-1 % gh) + gh) % gh]; // NW
-           nb[3] = cellMap[((i-1 % gw) + gw) % gw][((j % gh) + gh) % gh]; // NW
-           nb[4] = cellMap[((i+1 % gw) + gw) % gw][((j % gh) + gh) % gh]; // NW
-           nb[5] = cellMap[((i-1 % gw) + gw) % gw][((j+1 % gh) + gh) % gh]; // NW
-           nb[6] = cellMap[((i % gw) + gw) % gw][((j+1 % gh) + gh) % gh]; // NW
-           nb[7] = cellMap[((i+1 % gw) + gw) % gw][((j+1 % gh) + gh) % gh]; // NW           
-
-            // check for the number of live neighbours!
+            bool nb[8] = {0,0,0,0,0,0,0,0}; // only 8 neighbouring cells, middle cell is occupied
+            // go around the clock and determine neighbors alive/dead status
+            nb[0] = cellMap[((i-1 % gw) + gw) % gw][((j-1 % gh) + gh) % gh]; // NW
+            nb[1] = cellMap[((i % gw) + gw) % gw][((j-1 % gh) + gh) % gh]; // NW
+            nb[2] = cellMap[((i+1 % gw) + gw) % gw][((j-1 % gh) + gh) % gh]; // NW
+            nb[3] = cellMap[((i-1 % gw) + gw) % gw][((j % gh) + gh) % gh]; // NW
+            nb[4] = cellMap[((i+1 % gw) + gw) % gw][((j % gh) + gh) % gh]; // NW
+            nb[5] = cellMap[((i-1 % gw) + gw) % gw][((j+1 % gh) + gh) % gh]; // NW
+            nb[6] = cellMap[((i % gw) + gw) % gw][((j+1 % gh) + gh) % gh]; // NW
+            nb[7] = cellMap[((i+1 % gw) + gw) % gw][((j+1 % gh) + gh) % gh]; // NW           
+            // get the sum of the number of live neighbours
             int nbno = std::accumulate(std::begin(nb), std::end(nb), 0);
-            //std::cout << nbno << std::endl;
             // apply the rules according to the number of neighbours
             if (cellMap[i][j] == 1) {
-                // check for death conditions
-                if (nbno < 2) {
-                    // each live cell with less than two neighbours dies
-                    newCellMap[i][j] = 0;
-                } else if (nbno > 3) {
-                    // each live cell with more than three neighbours dies
+                if (nbno < 2 || nbno > 3) {
+                    // each live cell with less than two or more than 3 neighbours dies
                     newCellMap[i][j] = 0;
                 } else {
-                    // set the new cell to alive if the old cell was alive
+                    // preserve status
                     newCellMap[i][j] = 1;
                 }
-                // if it's still alive here, it stays alive
             } else if (cellMap[i][j] == 0) {
-                // if it's dead and has exactly three neighbours, it comes alive!
                 if (nbno == 3) {
+                    // if cell has exactly three neighbours, it comes alive
                     newCellMap[i][j] = 1;
                 } else {
+                    // preserve status
                     newCellMap[i][j] = 0;
                 }
             }
@@ -182,6 +172,9 @@ void update() {
             cellMap[i][j] = newCellMap[i][j];
         }
     }
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end-start);
+    std::cout << "cellMap update duration: " << duration.count() << " mms." << std::endl;    
 }
 
 // main 
