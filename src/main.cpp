@@ -1,6 +1,7 @@
 #include <iostream>
 #include <SDL2/SDL.h>
 #include <numeric>
+#include "CellMap.h"
 
 // TODO wraparound ! doesn't really work yet!
 // TODO DONE click cells on/off with mouse
@@ -13,8 +14,8 @@
 
 // TODO DONE fixed x/y issue - why only square grids???
 const int CELL_SIZE = 8; // incl. +2 for the bottom + right borders
-const int GRID_WIDTH = 128; // 1024/8
-const int GRID_HEIGHT = 96; // 1024/8
+const long GRID_WIDTH = 128; // 1024/8
+const long GRID_HEIGHT = 96; // 1024/8
 const int WINDOW_WIDTH = (GRID_WIDTH*CELL_SIZE);
 const int WINDOW_HEIGHT = (GRID_HEIGHT*CELL_SIZE);
 
@@ -209,6 +210,14 @@ int main() {
     //srand(time(0));
     //CellGrid grid;
     initrandom();
+
+    // TEST
+    CellMap test(GRID_WIDTH, GRID_HEIGHT);
+
+    test.initialize();
+    test.update();
+
+
 
     // main loop
     while (true) {
