@@ -130,7 +130,7 @@ void update() {
         for (int j = 0; j < GRID_HEIGHT; ++j) {
             // get the values of the surrounding cells in a new array
             bool nb[8]{}; // = {0,0,0,0,0,0,0,0}; // only 8 neighbouring cells, middle cell is occupied
-          
+            /*
             nb[0] = cellMap[(i-1) % gw][(j-1) % gh]; // NW
             nb[1] = cellMap[i % gw][(j-1) % gh]; // N
             nb[2] = cellMap[(i+1) % gw][(j-1) % gh]; // NE
@@ -139,6 +139,15 @@ void update() {
             nb[5] = cellMap[(i-1) % gw][(j+1) % gh]; // SW
             nb[6] = cellMap[i % gw][(j+1) % gh]; // S
             nb[7] = cellMap[(i+1) % gw][(j+1) % gh]; // SE
+            */
+           nb[0] = cellMap[((i-1 % gw) + gw) % gw][((j-1 % gh) + gh) % gh]; // NW
+           nb[1] = cellMap[((i % gw) + gw) % gw][((j-1 % gh) + gh) % gh]; // NW
+           nb[2] = cellMap[((i+1 % gw) + gw) % gw][((j-1 % gh) + gh) % gh]; // NW
+           nb[3] = cellMap[((i-1 % gw) + gw) % gw][((j % gh) + gh) % gh]; // NW
+           nb[4] = cellMap[((i+1 % gw) + gw) % gw][((j % gh) + gh) % gh]; // NW
+           nb[5] = cellMap[((i-1 % gw) + gw) % gw][((j+1 % gh) + gh) % gh]; // NW
+           nb[6] = cellMap[((i % gw) + gw) % gw][((j+1 % gh) + gh) % gh]; // NW
+           nb[7] = cellMap[((i+1 % gw) + gw) % gw][((j+1 % gh) + gh) % gh]; // NW           
 
             // check for the number of live neighbours!
             int nbno = std::accumulate(std::begin(nb), std::end(nb), 0);
@@ -212,12 +221,9 @@ int main() {
     initrandom();
 
     // TEST
-    CellMap test(GRID_WIDTH, GRID_HEIGHT);
-
-    test.initialize();
-    test.update();
-
-
+    //CellMap test(GRID_WIDTH, GRID_HEIGHT);
+    //test.initialize();
+    //test.update();
 
     // main loop
     while (true) {
