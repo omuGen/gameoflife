@@ -1,5 +1,6 @@
 #include <iostream>
 #include <SDL2/SDL.h>
+//#include <SDL2/SDL_ttf.h> //TODO set up text!
 #include <numeric>
 #include "CellMap.h"
 #include <chrono>
@@ -22,8 +23,7 @@ const long GRID_HEIGHT = 96; // 768/8
 const int WINDOW_WIDTH = (GRID_WIDTH*CELL_SIZE);
 const int WINDOW_HEIGHT = (GRID_HEIGHT*CELL_SIZE);
 
-// TODO bug with specific cells being alive after initialization
-// #DONE switched cellMap type from int to bool!
+// #DONE TODO bug with specific cells being alive after initialization #switched cellMap type from int to bool!
 //bool (*p_currentMap)[GRID_HEIGHT];
 bool cellMap[GRID_WIDTH][GRID_HEIGHT]{};
 // create a new Cell Map for storing the updated values
@@ -56,21 +56,28 @@ bool paused = false;
 // TODO rework the manpulation of the cell map
 // mouse event handlers
 void HandleMouseMotion(SDL_MouseMotionEvent& event) {
+    //std::cout << event.state << std::endl;
     if (event.state == SDL_BUTTON_LEFT) {
+        //std::cout << "HMM: left button" << std::endl;
         cellMap[event.x/CELL_SIZE][event.y/CELL_SIZE] = 1;
-    } else if (event.state == SDL_BUTTON_RIGHT) {
+    }
+    if (event.state == SDL_BUTTON_RIGHT || event.state == SDL_BUTTON_X1) { // weird sdl button for (maybe only my?) mouse right button
+        //std::cout << "HMM: right button" << std::endl;
         cellMap[event.x/CELL_SIZE][event.y/CELL_SIZE] = 0;
     }
 }
 void HandleMouseButton(SDL_MouseButtonEvent& event) {
     if (event.button == SDL_BUTTON_LEFT) {
         if (event.state == SDL_PRESSED) {
+            //std::cout << "HMB: left button" << std::endl;
             cellMap[event.x/CELL_SIZE][event.y/CELL_SIZE] = 1;
         } else if (event.state == SDL_RELEASED) {
             // do nothing
         }
-    } else if (event.button == SDL_BUTTON_RIGHT) {
+    }
+    if (event.button == SDL_BUTTON_RIGHT) {
         if (event.state == SDL_PRESSED) {
+            //std::cout << "HMB: right button" << std::endl;
             cellMap[event.x/CELL_SIZE][event.y/CELL_SIZE] = 0;
         } else if (event.state == SDL_RELEASED) {
             // do nothing
@@ -116,7 +123,7 @@ void HandleEvents(SDL_Event& event) {
     if (event.type == SDL_MOUSEMOTION) {
         HandleMouseMotion(event.motion);
     }
-    if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) {
+    if (event.type == SDL_MOUSEBUTTONDOWN /*|| event.type == SDL_MOUSEBUTTONUP*/) {
         HandleMouseButton(event.button);
     }
 }
@@ -256,7 +263,7 @@ int main() {
         for (int i = 0; i < GRID_WIDTH; ++i) {
             for (int j = 0; j < GRID_HEIGHT; ++j) {
                 if (cellMap[i][j] == 1) {
-                    rect = {i*CELL_SIZE, j*CELL_SIZE, CELL_SIZE-1, CELL_SIZE-1};
+                    rect = {i*CELL_SIZE, j*CELL_SIZE, CELL_SIZE-2, CELL_SIZE-2};
                     // set color to white
                     SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
                     SDL_RenderDrawRect(renderer, &rect);
