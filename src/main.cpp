@@ -11,13 +11,14 @@
 // #DONE TODO pause game
 // TODO template library
 // #DONE TODO mouse click & movement bug #fixed properly (mousemotion event contains x/y info)
-// TODO bug segfault when mouseout (while button pressed??)
-// TODO Performance issues! How to track?
+// #DONE TODO bug segfault when mouseout (while button pressed??) #dunno how, but this disappeared
+// #DONE TODO Performance issues! How to track? #tracking with chrono, SDL_RENDERER_PRESENTVSYNC flag seems to have helped the fan problem
 
 // TODO DONE fixed x/y issue - why only square grids???
 const int CELL_SIZE = 8; // incl. +2 for the bottom + right borders
-const long GRID_WIDTH = 200; // 1024/8
-const long GRID_HEIGHT = 150; // 1024/8
+// TODO de-couple window resolution and grid size
+const long GRID_WIDTH = 128; // 1024/8
+const long GRID_HEIGHT = 96; // 768/8
 const int WINDOW_WIDTH = (GRID_WIDTH*CELL_SIZE);
 const int WINDOW_HEIGHT = (GRID_HEIGHT*CELL_SIZE);
 
@@ -124,11 +125,11 @@ void HandleEvents(SDL_Event& event) {
 void update() {
 
     // local vars for grid height and width
-    int gw = GRID_WIDTH;
-    int gh = GRID_HEIGHT;
+    //int gw = GRID_WIDTH;
+    //int gh = GRID_HEIGHT;
 
     // start time measurement
-    auto start = std::chrono::high_resolution_clock::now();
+    //auto start = std::chrono::high_resolution_clock::now();
     // check the status of each cell and apply the rules
     // main update logic loop
     for (int i = 0; i < GRID_WIDTH; ++i) {
@@ -136,14 +137,14 @@ void update() {
             // get the values of the surrounding cells in a new array
             bool nb[8] = {0,0,0,0,0,0,0,0}; // only 8 neighbouring cells, middle cell is occupied
             // go around the clock and determine neighbors alive/dead status
-            nb[0] = cellMap[((i-1 % gw) + gw) % gw][((j-1 % gh) + gh) % gh]; // NW
-            nb[1] = cellMap[((i % gw) + gw) % gw][((j-1 % gh) + gh) % gh]; // NW
-            nb[2] = cellMap[((i+1 % gw) + gw) % gw][((j-1 % gh) + gh) % gh]; // NW
-            nb[3] = cellMap[((i-1 % gw) + gw) % gw][((j % gh) + gh) % gh]; // NW
-            nb[4] = cellMap[((i+1 % gw) + gw) % gw][((j % gh) + gh) % gh]; // NW
-            nb[5] = cellMap[((i-1 % gw) + gw) % gw][((j+1 % gh) + gh) % gh]; // NW
-            nb[6] = cellMap[((i % gw) + gw) % gw][((j+1 % gh) + gh) % gh]; // NW
-            nb[7] = cellMap[((i+1 % gw) + gw) % gw][((j+1 % gh) + gh) % gh]; // NW           
+            nb[0] = cellMap[((i-1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j-1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
+            nb[1] = cellMap[((i % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j-1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
+            nb[2] = cellMap[((i+1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j-1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
+            nb[3] = cellMap[((i-1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
+            nb[4] = cellMap[((i+1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
+            nb[5] = cellMap[((i-1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j+1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
+            nb[6] = cellMap[((i % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j+1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
+            nb[7] = cellMap[((i+1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j+1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW           
             // get the sum of the number of live neighbours
             int nbno = std::accumulate(std::begin(nb), std::end(nb), 0);
             // apply the rules according to the number of neighbours
@@ -172,9 +173,9 @@ void update() {
             cellMap[i][j] = newCellMap[i][j];
         }
     }
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end-start);
-    std::cout << "cellMap update duration: " << duration.count() << " mms." << std::endl;    
+    //auto end = std::chrono::high_resolution_clock::now();
+    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end-start);
+    //std::cout << "cellMap update duration: " << duration.count() << " mms." << std::endl;    
 }
 
 // main 
@@ -190,7 +191,7 @@ int main() {
         return 1;
     }
 
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (renderer == NULL) {
         printf("SDL_CreateRenderer Error: %s\n", SDL_GetError());
         return 1;
@@ -218,13 +219,17 @@ int main() {
     //test.initialize();
     //test.update();
 
-    // main loop
+    /* MAIN LOOP ******************************************************************/
     while (true) {
         // check for events
-        if (SDL_PollEvent(&Event)) {
+        while (SDL_PollEvent(&Event)) {
             // handle events
             if (Event.type == SDL_QUIT) {
-                break;
+                //break;
+                SDL_DestroyRenderer(renderer);
+                SDL_DestroyWindow(window);
+                SDL_Quit();
+                return 0;
             }
             HandleEvents(Event);
         }
@@ -233,19 +238,25 @@ int main() {
         ticksNow = SDL_GetTicks();
         // only update once per updateInterval
         if (((ticksNow - ticksUpdate) > updateInterval) && !paused) {
+            //std::cout << "updating after: " << ticksNow - ticksUpdate << std::endl;
             // update live/dead status for all cells
             update();
             // record time of this update
             ticksUpdate = SDL_GetTicks();
         }
-        // set color to black and color everything
+        // TODO Problem: moving the render code into the ticks-if clause interferes with mouse interaction
+        // however, having it outside produces too many unneeded renders...
+        // start time measurement
+        // auto startRender = std::chrono::high_resolution_clock::now();
+        // set color to black
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+        // inititalize backbuffer (to bgcolor)
         SDL_RenderClear(renderer);
         // attempt to draw the grid
         for (int i = 0; i < GRID_WIDTH; ++i) {
             for (int j = 0; j < GRID_HEIGHT; ++j) {
                 if (cellMap[i][j] == 1) {
-                    rect = {i*CELL_SIZE, j*CELL_SIZE, CELL_SIZE-2, CELL_SIZE-2};
+                    rect = {i*CELL_SIZE, j*CELL_SIZE, CELL_SIZE-1, CELL_SIZE-1};
                     // set color to white
                     SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
                     SDL_RenderDrawRect(renderer, &rect);
@@ -255,7 +266,12 @@ int main() {
         }
         // present the rendered grid to the window
         SDL_RenderPresent(renderer);
+        // auto endRender = std::chrono::high_resolution_clock::now();
+        // auto durationRender = std::chrono::duration_cast<std::chrono::microseconds>(endRender-startRender);
+        // std::cout << "render duration: " << durationRender.count() << " mms." << std::endl;          
+
     }
+    /* MAIN LOOP: END *************************************************************/
     // clean up
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
