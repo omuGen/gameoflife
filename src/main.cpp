@@ -219,7 +219,7 @@ int main() {
         printf("SDL_CreateWindow Error: %s\n", SDL_GetError());
         return 1;
     }
-
+    // running with SDL_RENDERER_PRESENTVSYNC is essential for performance!
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (renderer == NULL) {
         printf("SDL_CreateRenderer Error: %s\n", SDL_GetError());
