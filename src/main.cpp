@@ -8,7 +8,7 @@
 // #DONE wraparound ! doesn't really work yet! DONE Modulo problem!
 // #DONE TODO click cells on/off with mouse
 // #DONE TODO draw with mouse
-// TODO different randomizer
+// TODO different randomizers
 // #DONE TODO pause game
 // TODO template library
 // #DONE TODO mouse click & movement bug #fixed properly (mousemotion event contains x/y info)
@@ -140,10 +140,17 @@ void HandleEvents(SDL_Event& event) {
         HandleMouseButton(event.button);
     }
 }
-
+/**
+ * Takes coordinates for a specific cell and determines the neighbor status for
+ * the cell found at those coordinates.
+ * 
+ * @param {int} i x-coordinate for the cell
+ * @param {int} j y-coordinate for the cell
+ */
 int GetNeighborCount(int i, int j) {
     // get the values of the surrounding cells in a new array
-    bool nb[8] = {0,0,0,0,0,0,0,0}; // only 8 neighbouring cells, middle cell is occupied
+    // only 8 neighbouring cells cuz middle cell is occupied
+    bool nb[8] = {0,0,0,0,0,0,0,0};
     // go around the clock and determine neighbors alive/dead status
     nb[0] = cellMap[((i-1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j-1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
     nb[1] = cellMap[((i % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j-1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
@@ -158,8 +165,10 @@ int GetNeighborCount(int i, int j) {
     return nbno;
 }
 
-
-// update
+/**
+ * Main update function, updates the whole grid based on the most recent grid
+ * status.
+ */
 void update() {
 
     // local vars for grid height and width
@@ -172,24 +181,12 @@ void update() {
     // main update logic loop
     for (int i = 0; i < GRID_WIDTH; ++i) {
         for (int j = 0; j < GRID_HEIGHT; ++j) {
-            // get the values of the surrounding cells in a new array
-            // bool nb[8] = {0,0,0,0,0,0,0,0}; // only 8 neighbouring cells, middle cell is occupied
-            // go around the clock and determine neighbors alive/dead status
-            // nb[0] = cellMap[((i-1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j-1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
-            // nb[1] = cellMap[((i % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j-1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
-            // nb[2] = cellMap[((i+1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j-1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
-            // nb[3] = cellMap[((i-1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
-            // nb[4] = cellMap[((i+1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
-            // nb[5] = cellMap[((i-1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j+1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
-            // nb[6] = cellMap[((i % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j+1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
-            // nb[7] = cellMap[((i+1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j+1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW           
             // get the sum of the number of live neighbours
-            // int nbno = std::accumulate(std::begin(nb), std::end(nb), 0);
             int nbno = GetNeighborCount(i,j);
             // apply the rules according to the number of neighbours
             if (cellMap[i][j] == 1) {
                 if (nbno < 2 || nbno > 3) {
-                    // each live cell with less than two or more than 3 neighbours dies
+                    // each live cell with less than two or more than 3 dies
                     newCellMap[i][j] = 0;
                 } else {
                     // preserve status
@@ -197,7 +194,7 @@ void update() {
                 }
             } else if (cellMap[i][j] == 0) {
                 if (nbno == 3) {
-                    // if cell has exactly three neighbours, it comes alive
+                    // if cell has exactly 3 neighbours, it comes alive
                     newCellMap[i][j] = 1;
                 } else {
                     // preserve status
