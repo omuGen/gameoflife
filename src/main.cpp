@@ -17,14 +17,22 @@
 // TODO implement other universes (rules other than B3/S23)
 
 // TODO DONE fixed x/y issue - why only square grids???
-const int CELL_SIZE = 8; // incl. +2 for the bottom + right borders
 // TODO de-couple window resolution and grid size
-const long GRID_WIDTH = 128; // 1024/8
-const long GRID_HEIGHT = 96; // 768/8
-const int WINDOW_WIDTH = (GRID_WIDTH*CELL_SIZE);
-const int WINDOW_HEIGHT = (GRID_HEIGHT*CELL_SIZE);
-const int CELL_BORDER = 1;
+// const int CELL_SIZE = 32; // incl. +2 for the bottom + right borders
+// const long GRID_WIDTH = 32; // 1024/8 (128)
+// const long GRID_HEIGHT = 24; // 768/8 (96)
+// const int WINDOW_WIDTH = (GRID_WIDTH*CELL_SIZE)+128;
+// const int WINDOW_HEIGHT = (GRID_HEIGHT*CELL_SIZE);
+// const int CELL_BORDER = 1;
 const bool DRAW_GRID = true;
+
+const long WINDOW_WIDTH = 1024;
+const long WINDOW_HEIGHT = 768;
+const int CELL_SIZE = 12;
+const int CELL_BORDER = 1;
+const long MENU_BAR_WIDTH = 128;
+const long GRID_WIDTH = (WINDOW_WIDTH-MENU_BAR_WIDTH)/(CELL_SIZE+CELL_BORDER);
+const long GRID_HEIGHT = WINDOW_HEIGHT/(CELL_SIZE+CELL_BORDER);
 
 // update after how many miliseconds
 float updateInterval = 200;
@@ -73,7 +81,8 @@ void HandleMouseMotion(SDL_MouseMotionEvent& event) {
 void HandleMouseButton(SDL_MouseButtonEvent& event) {
     if (event.button == SDL_BUTTON_LEFT) {
         if (event.state == SDL_PRESSED) {
-            //std::cout << "HMB: left button" << std::endl;
+            std::cout << "HMB: left button: " << event.x << ", " << event.y << std::endl;
+            std::cout << "HMB: left button: " << event.x/CELL_SIZE << ", " << event.y/CELL_SIZE << std::endl;
             cellMap[event.x/CELL_SIZE][event.y/CELL_SIZE] = 1;
         } else if (event.state == SDL_RELEASED) {
             // do nothing
@@ -289,11 +298,11 @@ int main() {
             // set grid color
             SDL_SetRenderDrawColor(renderer, 20, 20, 20, SDL_ALPHA_OPAQUE);
             // draw vertical lines
-            for (int i = 0; i < GRID_WIDTH; ++i) {
+            for (int i = 0; i <= GRID_WIDTH; ++i) {
                 SDL_RenderDrawLine(renderer, (i*CELL_SIZE)+x_offset, 0, (i*CELL_SIZE)+x_offset, GRID_HEIGHT*CELL_SIZE);
             }
             // draw horizontal lines
-            for (int i = 0; i < GRID_WIDTH; ++i) {
+            for (int i = 0; i <= GRID_HEIGHT; ++i) {
                 SDL_RenderDrawLine(renderer, 0, (i*CELL_SIZE)+y_offset, GRID_WIDTH*CELL_SIZE, (i*CELL_SIZE)+y_offset);
             }            
         }
