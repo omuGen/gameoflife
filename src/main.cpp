@@ -4,6 +4,8 @@
 #include <numeric>
 #include "CellMap.h"
 #include <chrono>
+#include "Rectangle.h"
+#include "Window.h"
 
 // #DONE wraparound ! doesn't really work yet! DONE Modulo problem!
 // #DONE TODO click cells on/off with mouse
@@ -166,15 +168,10 @@ int GetNeighborCount(int i, int j) {
 }
 
 /**
- * Main update function, updates the whole grid based on the most recent grid
+ *  Update function, updates the whole grid based on the most recent grid
  * status.
  */
 void update() {
-
-    // local vars for grid height and width
-    //int gw = GRID_WIDTH;
-    //int gh = GRID_HEIGHT;
-
     // start time measurement
     //auto start = std::chrono::high_resolution_clock::now();
     // check the status of each cell and apply the rules
@@ -221,11 +218,12 @@ int main() {
         return 1;
     }
 
-    SDL_Window* window = SDL_CreateWindow("gameoflife", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
-    if (window == NULL) {
-        printf("SDL_CreateWindow Error: %s\n", SDL_GetError());
-        return 1;
-    }
+    // SDL_Window* window = SDL_CreateWindow("gameoflife", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
+    Window window;
+    // if (!window) {
+    //     printf("SDL_CreateWindow Error: %s\n", SDL_GetError());
+    //     return 1;
+    // }
     // running with SDL_RENDERER_PRESENTVSYNC is essential for performance!
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (renderer == NULL) {
@@ -235,9 +233,9 @@ int main() {
 
     //bool active = true; // TODO do i need this?
     SDL_Event Event;
-
     SDL_Rect rect;
 
+    Rectangle UI_Rectangle{SDL_Rect{48,48,48,48}};
     // number of ticks since the start of the game
     Uint32 ticksStart = SDL_GetTicks();
     // number of ticks at the time of the last update
@@ -321,6 +319,10 @@ int main() {
                 }
             }
         }
+        // Render a UI_Rectangle
+        SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
+        UI_Rectangle.Render(SDL_GetWindowSurface(window));
+
         // present the rendered grid to the window
         SDL_RenderPresent(renderer);
         // auto endRender = std::chrono::high_resolution_clock::now();
