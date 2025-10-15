@@ -164,18 +164,19 @@ void update() {
     for (int i = 0; i < GRID_WIDTH; ++i) {
         for (int j = 0; j < GRID_HEIGHT; ++j) {
             // get the values of the surrounding cells in a new array
-            bool nb[8] = {0,0,0,0,0,0,0,0}; // only 8 neighbouring cells, middle cell is occupied
+            // bool nb[8] = {0,0,0,0,0,0,0,0}; // only 8 neighbouring cells, middle cell is occupied
             // go around the clock and determine neighbors alive/dead status
-            nb[0] = cellMap[((i-1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j-1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
-            nb[1] = cellMap[((i % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j-1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
-            nb[2] = cellMap[((i+1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j-1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
-            nb[3] = cellMap[((i-1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
-            nb[4] = cellMap[((i+1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
-            nb[5] = cellMap[((i-1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j+1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
-            nb[6] = cellMap[((i % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j+1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
-            nb[7] = cellMap[((i+1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j+1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW           
+            // nb[0] = cellMap[((i-1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j-1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
+            // nb[1] = cellMap[((i % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j-1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
+            // nb[2] = cellMap[((i+1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j-1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
+            // nb[3] = cellMap[((i-1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
+            // nb[4] = cellMap[((i+1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
+            // nb[5] = cellMap[((i-1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j+1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
+            // nb[6] = cellMap[((i % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j+1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW
+            // nb[7] = cellMap[((i+1 % GRID_WIDTH) + GRID_WIDTH) % GRID_WIDTH][((j+1 % GRID_HEIGHT) + GRID_HEIGHT) % GRID_HEIGHT]; // NW           
             // get the sum of the number of live neighbours
-            int nbno = std::accumulate(std::begin(nb), std::end(nb), 0);
+            // int nbno = std::accumulate(std::begin(nb), std::end(nb), 0);
+            int nbno = GetNeighborCount(i,j);
             // apply the rules according to the number of neighbours
             if (cellMap[i][j] == 1) {
                 if (nbno < 2 || nbno > 3) {
