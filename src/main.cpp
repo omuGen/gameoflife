@@ -4,6 +4,8 @@
 #include <numeric>
 #include "CellMap.h"
 #include <chrono>
+#include <fstream>
+#include <string>
 
 // #DONE wraparound ! doesn't really work yet! DONE Modulo problem!
 // #DONE TODO click cells on/off with mouse
@@ -25,12 +27,14 @@
 // const int WINDOW_HEIGHT = (GRID_HEIGHT*CELL_SIZE);
 // const int CELL_BORDER = 1;
 const bool DRAW_GRID = true;
+const int CELL_OFFSET = 0;
 
 const long WINDOW_WIDTH = 1024;
 const long WINDOW_HEIGHT = 768;
-const int CELL_SIZE = 12;
+const int CELL_SIZE = 7;
 const int CELL_BORDER = 1;
-const long MENU_BAR_WIDTH = 128;
+int CELL_SIZE_F = CELL_SIZE+CELL_BORDER;
+const long MENU_BAR_WIDTH = 0;
 const long GRID_WIDTH = (WINDOW_WIDTH-MENU_BAR_WIDTH)/(CELL_SIZE+CELL_BORDER);
 const long GRID_HEIGHT = WINDOW_HEIGHT/(CELL_SIZE+CELL_BORDER);
 
@@ -65,25 +69,76 @@ void initclear() {
     //p_currentMap = cellMap;
 }
 
+void savegridtofile() {
+    std::ofstream outputFile("test.txt");
+    if (outputFile.is_open()) {
+        std::string coords;
+        for (int i = 0; i < GRID_WIDTH; ++i) {
+            coords += std::to_string(i) + "\t";
+            for (int j = 0; j < GRID_HEIGHT; ++j) {
+                if (cellMap[i][j] == 1) {
+                    coords += std::to_string(j) + "\t";
+                }
+            }
+            coords += "\n";
+        }
+        outputFile << coords;
+    }
+    outputFile.close();
+}
+
+void loadgrid() {
+    std::ifstream inputFile("test.txt");
+    initclear();
+    if (inputFile.is_open()) {
+        std::string line;
+        while (std::getline(inputFile, line)) {
+            std::vector<std::string> cells;
+            size_t position;
+            std::string cell;
+            while ((position = line.find("\t")) != std::string::npos) {
+                cell = line.substr(0, position);
+                //std::cout << cell << std::endl;
+                cells.push_back(cell);
+                line.erase(0, position +1);
+            }
+            //cells.push_back(line.substr(0,line.length()-2));
+            for (size_t i = 1; i < cells.size(); i++) {
+                //std::cout << "cells.size(): " << cells.size() << std::endl;
+                int cell_idx = stoi(cells[0]);
+                int cell_i = stoi(cells[i]);
+                cellMap[cell_idx][cell_i] = 1;
+            }
+        }
+    }
+}
+
 // TODO rework the manpulation of the cell map
 // mouse event handlers
 void HandleMouseMotion(SDL_MouseMotionEvent& event) {
+    int x_coord = event.x - CELL_OFFSET;
+    int y_coord = event.y - CELL_OFFSET;
     //std::cout << event.state << std::endl;
     if (event.state == SDL_BUTTON_LEFT) {
         //std::cout << "HMM: left button" << std::endl;
-        cellMap[event.x/CELL_SIZE][event.y/CELL_SIZE] = 1;
+        //cellMap[event.x/CELL_SIZE][event.y/CELL_SIZE] = 1;
+        cellMap[x_coord/CELL_SIZE_F][y_coord/CELL_SIZE_F] = 1;
     }
     if (event.state == SDL_BUTTON_RIGHT || event.state == SDL_BUTTON_X1) { // weird sdl button for (maybe only my?) mouse right button
         //std::cout << "HMM: right button" << std::endl;
-        cellMap[event.x/CELL_SIZE][event.y/CELL_SIZE] = 0;
+        //cellMap[event.x/CELL_SIZE][event.y/CELL_SIZE] = 0;
+        cellMap[x_coord/CELL_SIZE_F][y_coord/CELL_SIZE_F] = 0;
     }
 }
 void HandleMouseButton(SDL_MouseButtonEvent& event) {
+    int x_coord = event.x - CELL_OFFSET;
+    int y_coord = event.y - CELL_OFFSET;
     if (event.button == SDL_BUTTON_LEFT) {
         if (event.state == SDL_PRESSED) {
             std::cout << "HMB: left button: " << event.x << ", " << event.y << std::endl;
             std::cout << "HMB: left button: " << event.x/CELL_SIZE << ", " << event.y/CELL_SIZE << std::endl;
-            cellMap[event.x/CELL_SIZE][event.y/CELL_SIZE] = 1;
+            //cellMap[event.x/CELL_SIZE][event.y/CELL_SIZE] = 1;
+            cellMap[x_coord/CELL_SIZE_F][y_coord/CELL_SIZE_F] = 1;
         } else if (event.state == SDL_RELEASED) {
             // do nothing
         }
@@ -91,7 +146,8 @@ void HandleMouseButton(SDL_MouseButtonEvent& event) {
     if (event.button == SDL_BUTTON_RIGHT) {
         if (event.state == SDL_PRESSED) {
             //std::cout << "HMB: right button" << std::endl;
-            cellMap[event.x/CELL_SIZE][event.y/CELL_SIZE] = 0;
+            //cellMap[event.x/CELL_SIZE][event.y/CELL_SIZE] = 0;
+            cellMap[x_coord/CELL_SIZE_F][y_coord/CELL_SIZE_F] = 0;
         } else if (event.state == SDL_RELEASED) {
             // do nothing
         }
@@ -130,7 +186,17 @@ void HandleEvents(SDL_Event& event) {
         if (event.key.keysym.sym == SDLK_c) {
             std::cout << "Cleared." << std::endl;
             initclear();
-        }                
+        }
+        // 'f' to save grid to file
+        if (event.key.keysym.sym == SDLK_f) {
+            std::cout << "Saved." << std::endl;
+            savegridtofile();
+        }
+       // 'l' to load grid from file
+        if (event.key.keysym.sym == SDLK_l) {
+            std::cout << "Loaded." << std::endl;
+            loadgrid();
+        }            
     }
     //mouse events
     if (event.type == SDL_MOUSEMOTION) {
@@ -296,15 +362,17 @@ int main() {
             SDL_SetRenderDrawColor(renderer, 20, 20, 20, SDL_ALPHA_OPAQUE);
             // draw vertical lines
             for (int i = 0; i <= GRID_WIDTH; ++i) {
-                SDL_RenderDrawLine(renderer, (i*CELL_SIZE)+x_offset, 0, (i*CELL_SIZE)+x_offset, GRID_HEIGHT*CELL_SIZE);
+                //SDL_RenderDrawLine(renderer, (i*CELL_SIZE)+x_offset, 0, (i*CELL_SIZE)+x_offset, GRID_HEIGHT*CELL_SIZE);
+                SDL_RenderDrawLine(renderer, (i*CELL_SIZE_F)+x_offset, 0, (i*CELL_SIZE_F)+x_offset, GRID_HEIGHT*CELL_SIZE_F);
             }
             // draw horizontal lines
             for (int i = 0; i <= GRID_HEIGHT; ++i) {
-                SDL_RenderDrawLine(renderer, 0, (i*CELL_SIZE)+y_offset, GRID_WIDTH*CELL_SIZE, (i*CELL_SIZE)+y_offset);
+                //SDL_RenderDrawLine(renderer, 0, (i*CELL_SIZE)+y_offset, GRID_WIDTH*CELL_SIZE, (i*CELL_SIZE)+y_offset);
+                SDL_RenderDrawLine(renderer, 0, (i*CELL_SIZE_F)+y_offset, GRID_WIDTH*CELL_SIZE_F, (i*CELL_SIZE_F)+y_offset);
             }            
         }
         // attempt to draw the cells
-        int cell_offset = 1;
+        int cell_offset = 0;
         for (int i = 0; i < GRID_WIDTH; ++i) {
             for (int j = 0; j < GRID_HEIGHT; ++j) {
                 if (cellMap[i][j] == 1) {
@@ -313,7 +381,8 @@ int main() {
                     int opacity = (nb*16) + 119;
                     SDL_SetRenderDrawColor(renderer, opacity, opacity, opacity, SDL_ALPHA_OPAQUE);
 
-                    rect = {(i*CELL_SIZE)+cell_offset, (j*CELL_SIZE)+cell_offset, CELL_SIZE-CELL_BORDER, CELL_SIZE-CELL_BORDER};
+                    //rect = {(i*CELL_SIZE)+cell_offset, (j*CELL_SIZE)+cell_offset, CELL_SIZE-CELL_BORDER, CELL_SIZE-CELL_BORDER};
+                    rect = {(i*CELL_SIZE_F)+cell_offset, (j*CELL_SIZE_F)+cell_offset, CELL_SIZE_F-CELL_BORDER, CELL_SIZE_F-CELL_BORDER};
                     // set color to white
                     //SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
                     SDL_RenderDrawRect(renderer, &rect);
