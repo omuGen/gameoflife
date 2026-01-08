@@ -17,6 +17,7 @@
 // #DONE TODO bug segfault when mouseout (while button pressed??) #dunno how, but this disappeared
 // #DONE TODO Performance issues! How to track? #tracking with chrono, SDL_RENDERER_PRESENTVSYNC flag seems to have helped the fan problem
 // TODO implement other universes (rules other than B3/S23)
+// TODO switch infinite mode on/off
 
 // TODO DONE fixed x/y issue - why only square grids???
 // TODO de-couple window resolution and grid size
@@ -37,9 +38,8 @@ int CELL_SIZE_F = CELL_SIZE+CELL_BORDER;
 const long MENU_BAR_WIDTH = 0;
 const long GRID_WIDTH = (WINDOW_WIDTH-MENU_BAR_WIDTH)/(CELL_SIZE+CELL_BORDER);
 const long GRID_HEIGHT = WINDOW_HEIGHT/(CELL_SIZE+CELL_BORDER);
-
 // update after how many miliseconds
-float updateInterval = 200;
+float updateInterval = 100;
 // start paused or unpaused
 bool paused = true;
 
@@ -121,12 +121,10 @@ void HandleMouseMotion(SDL_MouseMotionEvent& event) {
     //std::cout << event.state << std::endl;
     if (event.state == SDL_BUTTON_LEFT) {
         //std::cout << "HMM: left button" << std::endl;
-        //cellMap[event.x/CELL_SIZE][event.y/CELL_SIZE] = 1;
         cellMap[x_coord/CELL_SIZE_F][y_coord/CELL_SIZE_F] = 1;
     }
     if (event.state == SDL_BUTTON_RIGHT || event.state == SDL_BUTTON_X1) { // weird sdl button for (maybe only my?) mouse right button
         //std::cout << "HMM: right button" << std::endl;
-        //cellMap[event.x/CELL_SIZE][event.y/CELL_SIZE] = 0;
         cellMap[x_coord/CELL_SIZE_F][y_coord/CELL_SIZE_F] = 0;
     }
 }
@@ -137,7 +135,6 @@ void HandleMouseButton(SDL_MouseButtonEvent& event) {
         if (event.state == SDL_PRESSED) {
             std::cout << "HMB: left button: " << event.x << ", " << event.y << std::endl;
             std::cout << "HMB: left button: " << event.x/CELL_SIZE << ", " << event.y/CELL_SIZE << std::endl;
-            //cellMap[event.x/CELL_SIZE][event.y/CELL_SIZE] = 1;
             cellMap[x_coord/CELL_SIZE_F][y_coord/CELL_SIZE_F] = 1;
         } else if (event.state == SDL_RELEASED) {
             // do nothing
@@ -146,7 +143,6 @@ void HandleMouseButton(SDL_MouseButtonEvent& event) {
     if (event.button == SDL_BUTTON_RIGHT) {
         if (event.state == SDL_PRESSED) {
             //std::cout << "HMB: right button" << std::endl;
-            //cellMap[event.x/CELL_SIZE][event.y/CELL_SIZE] = 0;
             cellMap[x_coord/CELL_SIZE_F][y_coord/CELL_SIZE_F] = 0;
         } else if (event.state == SDL_RELEASED) {
             // do nothing
@@ -168,12 +164,14 @@ void HandleEvents(SDL_Event& event) {
             }
         }
         // numpad '+' for faster
-        if (event.key.keysym.sym == SDLK_KP_PLUS) {
+        if (event.key.keysym.sym == SDLK_KP_PLUS
+            || event.key.keysym.sym == SDLK_PLUS) {
             std::cout << "Speed increased." << std::endl;
             updateInterval -= 10;
         }
         // numpad '-' for slower
-        if (event.key.keysym.sym == SDLK_KP_MINUS) {
+        if (event.key.keysym.sym == SDLK_KP_MINUS
+            || event.key.keysym.sym == SDLK_MINUS) {
             std::cout << "Speed decreased." << std::endl;
             updateInterval += 10;
         }
@@ -230,17 +228,11 @@ int GetNeighborCount(int i, int j) {
     int nbno = std::accumulate(std::begin(nb), std::end(nb), 0);
     return nbno;
 }
-
 /**
  * Main update function, updates the whole grid based on the most recent grid
  * status.
  */
 void update() {
-
-    // local vars for grid height and width
-    //int gw = GRID_WIDTH;
-    //int gh = GRID_HEIGHT;
-
     // start time measurement
     //auto start = std::chrono::high_resolution_clock::now();
     // check the status of each cell and apply the rules
@@ -312,9 +304,8 @@ int main() {
     Uint32 ticksNow = ticksStart;
 
     // prime the randomizer
-    //srand(time(0));
-    //CellGrid grid;
-    initrandom();
+    //initrandom();
+    initclear();
 
     // TEST
     //CellMap test(GRID_WIDTH, GRID_HEIGHT);
