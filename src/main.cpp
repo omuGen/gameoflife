@@ -27,7 +27,7 @@
 // const int WINDOW_WIDTH = (GRID_WIDTH*CELL_SIZE)+128;
 // const int WINDOW_HEIGHT = (GRID_HEIGHT*CELL_SIZE);
 // const int CELL_BORDER = 1;
-const bool DRAW_GRID = true;
+bool DRAW_GRID = true;
 const int CELL_OFFSET = 0;
 
 const long WINDOW_WIDTH = 1024;
@@ -42,6 +42,9 @@ const long GRID_HEIGHT = WINDOW_HEIGHT/(CELL_SIZE+CELL_BORDER);
 float updateInterval = 100;
 // start paused or unpaused
 bool paused = true;
+// percent chance to be alive for randomizer
+int randomness = 50;
+bool start_random = false;
 
 // #DONE TODO bug with specific cells being alive after initialization #switched cellMap type from int to bool!
 //bool (*p_currentMap)[GRID_HEIGHT];
@@ -53,7 +56,7 @@ bool newCellMap[GRID_WIDTH][GRID_HEIGHT]{};
 void initrandom() {
     for (int i = 0; i < GRID_WIDTH; ++i) {
         for (int j = 0; j < GRID_HEIGHT; ++j) {
-            cellMap[i][j] = rand() % 100 > 50 ? 0 : 1;
+            cellMap[i][j] = rand() % 100 > randomness ? 0 : 1;
         }
     }
     //p_currentMap = cellMap;
@@ -273,7 +276,24 @@ void update() {
 }
 
 // main 
-int main() {
+int main(int argc, char* argv[]) {
+    // handle command line arguments
+    // randomness
+    // TODO this doesn't work yet
+/*     if (argc > 3) {
+        std::cout << "Started with arguments:" << std::endl;
+        for (int i = 1; i <= argc; i++){
+            std::cout << argv[i] << std::endl;
+            if (strcmp(argv[i], "-r") == 0) {
+                std::cout << "Started with -r argument." << std::endl;
+                //randomness = std::stoi(argv[i+1]);
+                randomness = 10;
+                start_random = true;
+            }
+        }  
+    } */
+
+    // init video
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         printf("SDL_Init Error: %s\n", SDL_GetError());
         return 1;
@@ -304,8 +324,11 @@ int main() {
     Uint32 ticksNow = ticksStart;
 
     // prime the randomizer
-    //initrandom();
-    initclear();
+    if (start_random == true) {
+        initrandom();
+    } else {
+        initclear();
+    }
 
     // TEST
     //CellMap test(GRID_WIDTH, GRID_HEIGHT);
