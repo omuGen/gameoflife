@@ -6,6 +6,7 @@
 #include <chrono>
 #include <fstream>
 #include <string>
+#include <algorithm>
 
 // #DONE wraparound ! doesn't really work yet! DONE Modulo problem!
 // #DONE TODO click cells on/off with mouse
@@ -18,32 +19,35 @@
 // #DONE TODO Performance issues! How to track? #tracking with chrono, SDL_RENDERER_PRESENTVSYNC flag seems to have helped the fan problem
 // TODO implement other universes (rules other than B3/S23)
 // TODO switch infinite mode on/off
-
 // TODO DONE fixed x/y issue - why only square grids???
 // TODO de-couple window resolution and grid size
-// const int CELL_SIZE = 32; // incl. +2 for the bottom + right borders
-// const long GRID_WIDTH = 32; // 1024/8 (128)
-// const long GRID_HEIGHT = 24; // 768/8 (96)
-// const int WINDOW_WIDTH = (GRID_WIDTH*CELL_SIZE)+128;
-// const int WINDOW_HEIGHT = (GRID_HEIGHT*CELL_SIZE);
-// const int CELL_BORDER = 1;
-bool DRAW_GRID = true;
-const int CELL_OFFSET = 0;
 
+/**
+ * Constants
+ */
+const int CELL_OFFSET = 0;
 const long WINDOW_WIDTH = 1024;
 const long WINDOW_HEIGHT = 768;
 const int CELL_SIZE = 7;
 const int CELL_BORDER = 1;
-int CELL_SIZE_F = CELL_SIZE+CELL_BORDER;
 const long MENU_BAR_WIDTH = 0;
 const long GRID_WIDTH = (WINDOW_WIDTH-MENU_BAR_WIDTH)/(CELL_SIZE+CELL_BORDER);
 const long GRID_HEIGHT = WINDOW_HEIGHT/(CELL_SIZE+CELL_BORDER);
-// update after how many miliseconds
+
+/**
+ * Variables
+ */
+// combined cell size and cell border
+int CELL_SIZE_F = CELL_SIZE+CELL_BORDER;
+// draw the grid or don't?
+bool DRAW_GRID = true;
+// update after how many miliseconds?
 float updateInterval = 100;
-// start paused or unpaused
+// start paused or unpaused?
 bool paused = true;
 // percent chance to be alive for randomizer
 int randomness = 50;
+// start with a random distribution or a clear screen
 bool start_random = false;
 
 // #DONE TODO bug with specific cells being alive after initialization #switched cellMap type from int to bool!
@@ -52,24 +56,26 @@ bool cellMap[GRID_WIDTH][GRID_HEIGHT]{};
 // create a new Cell Map for storing the updated values
 bool newCellMap[GRID_WIDTH][GRID_HEIGHT]{};
 
-//initialize grid
-void initrandom() {
+/**
+ * Initialize grid with a random distribution of cells.
+ */
+void initrandom(int value) {
     for (int i = 0; i < GRID_WIDTH; ++i) {
         for (int j = 0; j < GRID_HEIGHT; ++j) {
-            cellMap[i][j] = rand() % 100 > randomness ? 0 : 1;
+            cellMap[i][j] = rand() % 100 > value ? 0 : 1;
         }
     }
-    //p_currentMap = cellMap;
 }
 
-// clear grid
+/**
+ * Initialize grid with only empty cells.
+ */ 
 void initclear() {
     for (int i = 0; i < GRID_WIDTH; ++i) {
         for (int j = 0; j < GRID_HEIGHT; ++j) {
             cellMap[i][j] = 0;
         }
     }
-    //p_currentMap = cellMap;
 }
 
 void savegridtofile() {
@@ -101,13 +107,10 @@ void loadgrid() {
             std::string cell;
             while ((position = line.find("\t")) != std::string::npos) {
                 cell = line.substr(0, position);
-                //std::cout << cell << std::endl;
                 cells.push_back(cell);
                 line.erase(0, position +1);
             }
-            //cells.push_back(line.substr(0,line.length()-2));
             for (size_t i = 1; i < cells.size(); i++) {
-                //std::cout << "cells.size(): " << cells.size() << std::endl;
                 int cell_idx = stoi(cells[0]);
                 int cell_i = stoi(cells[i]);
                 cellMap[cell_idx][cell_i] = 1;
@@ -152,7 +155,11 @@ void HandleMouseButton(SDL_MouseButtonEvent& event) {
         }
     }
 }
-
+/**
+ * Takes SDL_Events (mouse/keyboard) and handles them.
+ * @param {SDL_Event} event 
+ * 
+ */
 void HandleEvents(SDL_Event& event) {
     // keyup events
     if (event.type == SDL_KEYUP) {
@@ -181,7 +188,7 @@ void HandleEvents(SDL_Event& event) {
         // 'r' for restart
         if (event.key.keysym.sym == SDLK_r) {
             std::cout << "Restarted." << std::endl;
-            initrandom();
+            initrandom(randomness);
         }
         // 'c' to clear
         if (event.key.keysym.sym == SDLK_c) {
@@ -206,6 +213,26 @@ void HandleEvents(SDL_Event& event) {
     if (event.type == SDL_MOUSEBUTTONDOWN /*|| event.type == SDL_MOUSEBUTTONUP*/) {
         HandleMouseButton(event.button);
     }
+}
+/**
+ * GetCLIArgs
+ * 
+ */
+int GetCLIArgs(int arg_count, std::vector<std::string> arg_list, std::string option) {
+    int return_value;
+    for (int i = 0; i < arg_count; i++) {
+        std::cout << arg_list[i] << std::endl;
+        if (arg_list[i] == option && i < arg_count ) {
+            std::cout << "Called with '" << option << "' argument." << std::endl;
+            return_value = std::stoi(arg_list[i+1]);
+        }
+    }
+    return return_value;
+//     std::vector<std::string>::const_iterator rand = std::find(arg_list.begin(),arg_list.end(),"-r");
+//     if (std::find(arg_list.begin(),arg_list.end(),"-r") != arg_list.end()) {
+//         std::cout << "Called with 'random' argument. " << *rand << std::endl;
+
+//     }
 }
 /**
  * Takes coordinates for a specific cell and determines the neighbor status for
@@ -292,6 +319,17 @@ int main(int argc, char* argv[]) {
             }
         }  
     } */
+    std::vector<std::string> arg_list;
+    for (int i = 0; i < argc; i++) {
+        arg_list.push_back(std::string(argv[i]));
+    }
+    bool start_rand = false;
+    int rand_val = GetCLIArgs(argc, arg_list, "-r");
+    if (rand_val > 0) {
+        start_rand = true;
+        randomness = rand_val;
+        std::cout << "Randomness value set to: " << rand_val << std::endl;
+    }
 
     // init video
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -324,8 +362,8 @@ int main(int argc, char* argv[]) {
     Uint32 ticksNow = ticksStart;
 
     // prime the randomizer
-    if (start_random == true) {
-        initrandom();
+    if (start_rand == true) {
+        initrandom(randomness);
     } else {
         initclear();
     }
