@@ -214,26 +214,7 @@ void HandleEvents(SDL_Event& event) {
         HandleMouseButton(event.button);
     }
 }
-/**
- * GetCLIArgs
- * 
- */
-int GetCLIArgs(int arg_count, std::vector<std::string> arg_list, std::string option) {
-    int return_value;
-    for (int i = 0; i < arg_count; i++) {
-        std::cout << arg_list[i] << std::endl;
-        if (arg_list[i] == option && i < arg_count ) {
-            std::cout << "Called with '" << option << "' argument." << std::endl;
-            return_value = std::stoi(arg_list[i+1]);
-        }
-    }
-    return return_value;
-//     std::vector<std::string>::const_iterator rand = std::find(arg_list.begin(),arg_list.end(),"-r");
-//     if (std::find(arg_list.begin(),arg_list.end(),"-r") != arg_list.end()) {
-//         std::cout << "Called with 'random' argument. " << *rand << std::endl;
 
-//     }
-}
 /**
  * Takes coordinates for a specific cell and determines the neighbor status for
  * the cell found at those coordinates.
@@ -302,33 +283,119 @@ void update() {
     //std::cout << "cellMap update duration: " << duration.count() << " mms." << std::endl;    
 }
 
+void updateNew(std::vector<int> birth, std::vector<int> survive) {
+    // start time measurement
+    //auto start = std::chrono::high_resolution_clock::now();
+    // check the status of each cell and apply the rules
+    // main update logic loop
+    for (int i = 0; i < GRID_WIDTH; ++i) {
+        for (int j = 0; j < GRID_HEIGHT; ++j) {
+            // get the sum of the number of live neighbours
+            int nbno = GetNeighborCount(i,j);
+            // apply the rules according to the number of neighbours
+            if (cellMap[i][j] == 1) {
+                bool survivor = false;
+                for (int i = 0; i < size(survive); i++) {
+                    if (nbno == survive[i]) {
+                        survivor = true;
+                    }
+                }
+                if (survivor) {
+                    newCellMap[i][j] = 1;
+                } else {
+                    newCellMap[i][j] = 0;
+                }
+            } else if (cellMap[i][j] == 0) {
+                bool newborn = false;
+                for (int i = 0; i < size(birth); i++) {
+                    if (nbno == birth[i]) {
+                        newborn = true;
+                    }
+                }
+                if (newborn) {
+                    newCellMap[i][j] = 1;
+                } else {
+                    newCellMap[i][j] = 0;
+                }
+            }
+        }
+    }
+    // replace cellMap with updated newCellMap
+    for (int i = 0; i < GRID_WIDTH; ++i) {
+        for (int j = 0; j < GRID_HEIGHT; ++j) {
+            cellMap[i][j] = newCellMap[i][j];
+        }
+    }
+    //auto end = std::chrono::high_resolution_clock::now();
+    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end-start);
+    //std::cout << "cellMap update duration: " << duration.count() << " mms." << std::endl;    
+}
+
+/**
+ * GetCLIArgs
+ * 
+ */
+int GetCLIArgs(int arg_count, std::vector<std::string> arg_list, std::string option) {
+    int return_value = 0;
+    for (int i = 0; i < arg_count; i++) {
+        //std::cout << arg_list[i] << std::endl;
+        if (arg_list[i] == option && i < arg_count-1 ) {
+            std::cout << "Called with '" << option << "' argument." << std::endl;
+            return_value = std::stoi(arg_list[i+1]);
+        }
+    }
+    return return_value;
+}
+
+
 // main 
 int main(int argc, char* argv[]) {
     // handle command line arguments
-    // randomness
-    // TODO this doesn't work yet
-/*     if (argc > 3) {
-        std::cout << "Started with arguments:" << std::endl;
-        for (int i = 1; i <= argc; i++){
-            std::cout << argv[i] << std::endl;
-            if (strcmp(argv[i], "-r") == 0) {
-                std::cout << "Started with -r argument." << std::endl;
-                //randomness = std::stoi(argv[i+1]);
-                randomness = 10;
-                start_random = true;
-            }
-        }  
-    } */
     std::vector<std::string> arg_list;
     for (int i = 0; i < argc; i++) {
         arg_list.push_back(std::string(argv[i]));
     }
+    // randomness
     bool start_rand = false;
     int rand_val = GetCLIArgs(argc, arg_list, "-r");
-    if (rand_val > 0) {
+    if (rand_val != 0) {
         start_rand = true;
         randomness = rand_val;
         std::cout << "Randomness value set to: " << rand_val << std::endl;
+    }
+    // world rules
+    std::vector<int> birth;
+    std::vector<int> survive;
+    birth.push_back(2);
+    survive.push_back(2);
+    survive.push_back(3);
+
+    int b_arg = GetCLIArgs(argc,arg_list,"-b");
+    if (b_arg > 0) {
+        birth.clear();
+        int count = 0;
+        while (b_arg > 0) {
+            birth.push_back(b_arg % 10);
+            b_arg /= 10;
+            count++;
+        }
+    }
+    for (int i = 0; i < size(birth); i++) {
+        std::cout << "birth criteria: " << birth[i] << std::endl;
+    }
+    
+    int s_arg = GetCLIArgs(argc,arg_list,"-s");
+    if (s_arg > 0) {
+        survive.clear();
+        int count = 0;
+        while (s_arg > 0) {
+            survive.push_back(s_arg % 10);
+            s_arg /= 10;
+            count++;
+        }
+    }
+    for (int i = 0; i < size(survive); i++) {
+        std::cout << "survive criteria: " << survive[i] << std::endl;
     }
 
     // init video
@@ -394,7 +461,10 @@ int main(int argc, char* argv[]) {
         if (((ticksNow - ticksUpdate) > updateInterval) && !paused) {
             //std::cout << "updating after: " << ticksNow - ticksUpdate << std::endl;
             // update live/dead status for all cells
-            update();
+            //update();
+
+            updateNew(birth, survive);
+
             // record time of this update
             ticksUpdate = SDL_GetTicks();
         }
