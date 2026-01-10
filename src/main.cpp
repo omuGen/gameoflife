@@ -239,52 +239,8 @@ int GetNeighborCount(int i, int j) {
     int nbno = std::accumulate(std::begin(nb), std::end(nb), 0);
     return nbno;
 }
-/**
- * Main update function, updates the whole grid based on the most recent grid
- * status.
- */
-/*
-void update() {
-    // start time measurement
-    //auto start = std::chrono::high_resolution_clock::now();
-    // check the status of each cell and apply the rules
-    // main update logic loop
-    for (int i = 0; i < GRID_WIDTH; ++i) {
-        for (int j = 0; j < GRID_HEIGHT; ++j) {
-            // get the sum of the number of live neighbours
-            int nbno = GetNeighborCount(i,j);
-            // apply the rules according to the number of neighbours
-            if (cellMap[i][j] == 1) {
-                if (nbno < 2 || nbno > 3) {
-                    // each live cell with less than two or more than 3 dies
-                    newCellMap[i][j] = 0;
-                } else {
-                    // preserve status
-                    newCellMap[i][j] = 1;
-                }
-            } else if (cellMap[i][j] == 0) {
-                if (nbno == 3) {
-                    // if cell has exactly 3 neighbours, it comes alive
-                    newCellMap[i][j] = 1;
-                } else {
-                    // preserve status
-                    newCellMap[i][j] = 0;
-                }
-            }
-        }
-    }
-    // replace cellMap with updated newCellMap
-    for (int i = 0; i < GRID_WIDTH; ++i) {
-        for (int j = 0; j < GRID_HEIGHT; ++j) {
-            cellMap[i][j] = newCellMap[i][j];
-        }
-    }
-    //auto end = std::chrono::high_resolution_clock::now();
-    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end-start);
-    //std::cout << "cellMap update duration: " << duration.count() << " mms." << std::endl;    
-}*/
 
-void updateNew(std::vector<int> birth, std::vector<int> survive) {
+void update(std::vector<int> birth, std::vector<int> survive) {
     // start time measurement
     //auto start = std::chrono::high_resolution_clock::now();
     // check the status of each cell and apply the rules
@@ -331,28 +287,12 @@ void updateNew(std::vector<int> birth, std::vector<int> survive) {
     //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end-start);
     //std::cout << "cellMap update duration: " << duration.count() << " mms." << std::endl;    
 }
-
-/**
- * GetCLIArgs
- * 
- */
-int GetCLIArgs(int arg_count, std::vector<std::string> arg_list, std::string option) {
-    int return_value = 0;
-    for (int i = 0; i < arg_count; i++) {
-        //std::cout << arg_list[i] << std::endl;
-        if (arg_list[i] == option && i < arg_count-1 ) {
-            //std::cout << "Called with '" << option << "' argument." << std::endl;
-            return_value = std::stoi(arg_list[i+1]);
-        }
-    }
-    return return_value;
-}
 // struct for cli arguments
 struct CLIArg {
     bool flag;
     std::string value;
 };
-// arg parse NEW
+// arg parse
 CLIArg GetCLIOption(int arg_count, std::vector<std::string> arg_list, std::string option) {
     struct CLIArg result;
     result.flag = false;
@@ -384,7 +324,7 @@ int main(int argc, char* argv[]) {
     birth.push_back(2);
     survive.push_back(2);
     survive.push_back(3);
-    // NEW CLI queries
+    // CLI queries
     struct CLIArg random = GetCLIOption(argc,arg_list,"--random");
     if (random.flag) {
         std::cout << "Started with 'Random' option: " << random.value << "%" << std::endl;
@@ -413,44 +353,6 @@ int main(int argc, char* argv[]) {
             std::cout << "Invalid rulestring. Using default B3S23." << std::endl;
         }
     }
-    // randomness
-    /*
-    int rand_val = GetCLIArgs(argc, arg_list, "-r");
-    if (rand_val != 0) {
-        random_start = true;
-        randomness = rand_val;
-        std::cout << "Randomness value set to: " << rand_val << std::endl;
-    }
-
-    // get birth conditions from cli
-    int b_arg = GetCLIArgs(argc,arg_list,"-b");
-    if (b_arg > 0) {
-        birth.clear();
-        int count = 0;
-        while (b_arg > 0) {
-            birth.push_back(b_arg % 10);
-            b_arg /= 10;
-            count++;
-        }
-    }
-    for (int i = 0; i < size(birth); i++) {
-        std::cout << "Birth criteria: " << birth[i] << std::endl;
-    }
-    // get survivial conditions from cli
-    int s_arg = GetCLIArgs(argc,arg_list,"-s");
-    if (s_arg > 0) {
-        survive.clear();
-        int count = 0;
-        while (s_arg > 0) {
-            survive.push_back(s_arg % 10);
-            s_arg /= 10;
-            count++;
-        }
-    }
-    for (int i = 0; i < size(survive); i++) {
-        std::cout << "Survival criteria: " << survive[i] << std::endl;
-    }*/
-
     // init video
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         printf("SDL_Init Error: %s\n", SDL_GetError());
@@ -509,10 +411,7 @@ int main(int argc, char* argv[]) {
         if (((ticksNow - ticksUpdate) > updateInterval) && !paused) {
             //std::cout << "updating after: " << ticksNow - ticksUpdate << std::endl;
             // update live/dead status for all cells
-            //update();
-
-            updateNew(birth, survive);
-
+            update(birth, survive);
             // record time of this update
             ticksUpdate = SDL_GetTicks();
         }
