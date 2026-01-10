@@ -1,3 +1,9 @@
+/**
+ * Conway's "Life" implemented in C++.
+ * @author Jonas Weigt
+ * @version 0.3
+ * 
+ */
 #include <iostream>
 #include <SDL2/SDL.h>
 //#include <SDL2/SDL_ttf.h> //TODO set up text!
