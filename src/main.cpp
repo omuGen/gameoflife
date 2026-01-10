@@ -85,7 +85,7 @@ void initclear() {
 }
 
 void savegridtofile() {
-    std::ofstream outputFile("test.txt");
+    std::ofstream outputFile("save.txt");
     if (outputFile.is_open()) {
         std::string coords;
         for (int i = 0; i < GRID_WIDTH; ++i) {
@@ -103,7 +103,7 @@ void savegridtofile() {
 }
 
 void loadgrid() {
-    std::ifstream inputFile("test.txt");
+    std::ifstream inputFile("save.txt");
     initclear();
     if (inputFile.is_open()) {
         std::string line;
