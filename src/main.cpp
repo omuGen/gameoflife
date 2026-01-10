@@ -243,6 +243,7 @@ int GetNeighborCount(int i, int j) {
  * Main update function, updates the whole grid based on the most recent grid
  * status.
  */
+/*
 void update() {
     // start time measurement
     //auto start = std::chrono::high_resolution_clock::now();
@@ -281,7 +282,7 @@ void update() {
     //auto end = std::chrono::high_resolution_clock::now();
     //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end-start);
     //std::cout << "cellMap update duration: " << duration.count() << " mms." << std::endl;    
-}
+}*/
 
 void updateNew(std::vector<int> birth, std::vector<int> survive) {
     // start time measurement
@@ -340,14 +341,32 @@ int GetCLIArgs(int arg_count, std::vector<std::string> arg_list, std::string opt
     for (int i = 0; i < arg_count; i++) {
         //std::cout << arg_list[i] << std::endl;
         if (arg_list[i] == option && i < arg_count-1 ) {
-            std::cout << "Called with '" << option << "' argument." << std::endl;
+            //std::cout << "Called with '" << option << "' argument." << std::endl;
             return_value = std::stoi(arg_list[i+1]);
         }
     }
     return return_value;
 }
-
-
+// struct for cli arguments
+struct CLIArg {
+    bool flag;
+    std::string value;
+};
+// arg parse NEW
+CLIArg GetCLIOption(int arg_count, std::vector<std::string> arg_list, std::string option) {
+    struct CLIArg result;
+    result.flag = false;
+    result.value = "";
+    for (int i = 0; i < arg_count; i++) {
+        if (arg_list[i] == option) {
+            result.flag = true;
+            if (i < arg_count-1) {
+                result.value = arg_list[i+1];
+            }
+        }
+    }
+    return result;
+}
 // main 
 int main(int argc, char* argv[]) {
     // handle command line arguments
@@ -355,21 +374,64 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < argc; i++) {
         arg_list.push_back(std::string(argv[i]));
     }
-    // randomness
-    bool start_rand = false;
-    int rand_val = GetCLIArgs(argc, arg_list, "-r");
-    if (rand_val != 0) {
-        start_rand = true;
-        randomness = rand_val;
-        std::cout << "Randomness value set to: " << rand_val << std::endl;
-    }
+    // config vars (default values)
+    bool random_start = false;
+    int random_value = 50;
     // world rules
     std::vector<int> birth;
     std::vector<int> survive;
+    // default values
     birth.push_back(2);
     survive.push_back(2);
     survive.push_back(3);
+    // NEW CLI queries
+    struct CLIArg random = GetCLIOption(argc,arg_list,"--random");
+    if (random.flag) {
+        std::cout << "Started with 'Random' option: " << random.value << "%" << std::endl;
+        random_start = true;
+        random_value = std::stoi(random.value);
+    }
+    struct CLIArg rules = GetCLIOption(argc,arg_list,"--rulestring");
+    if (rules.flag) {
+        std::cout << "Started with 'Rulestring' option: " << rules.value << std::endl;
+        std::string val = rules.value;
+        birth.clear();
+        survive.clear();
+        int pos = 0;
+        std::string digit;
+        if ((pos = val.find('B')) != std::string::npos) {
+            //std::cout << "Birth rule found." << std::endl;
+            if ((pos = val.find('S')) != std::string::npos) {
+                //std::cout << "Survive rule found." << std::endl;
+                std::string birth_rule = val.substr(1,val.find("S")-1);
+                //std::cout << "birth_rule: " << birth_rule << std::endl;
+                std::string survive_rule = val.substr(val.find("S")+1,size(val));
+                //std::cout << "survive_rule: " << survive_rule << std::endl;
+                while (size(birth_rule) != 0) {
+                    birth.push_back(stoi(birth_rule.substr(0,1)));
+                    birth_rule.erase(0,1);
+                }
+                while (size(survive_rule) != 0) {
+                    survive.push_back(stoi(survive_rule.substr(0,1)));
+                    survive_rule.erase(0,1);
+                }
+            } else {}
+        } else {
+            std::cout << "Invalid rulestring: needs a Birth rule!" << std::endl;
+        }
+    }
 
+
+    // randomness
+
+    int rand_val = GetCLIArgs(argc, arg_list, "-r");
+    if (rand_val != 0) {
+        random_start = true;
+        randomness = rand_val;
+        std::cout << "Randomness value set to: " << rand_val << std::endl;
+    }
+
+    // get birth conditions from cli
     int b_arg = GetCLIArgs(argc,arg_list,"-b");
     if (b_arg > 0) {
         birth.clear();
@@ -381,9 +443,9 @@ int main(int argc, char* argv[]) {
         }
     }
     for (int i = 0; i < size(birth); i++) {
-        std::cout << "birth criteria: " << birth[i] << std::endl;
+        std::cout << "Birth criteria: " << birth[i] << std::endl;
     }
-    
+    // get survivial conditions from cli
     int s_arg = GetCLIArgs(argc,arg_list,"-s");
     if (s_arg > 0) {
         survive.clear();
@@ -395,7 +457,7 @@ int main(int argc, char* argv[]) {
         }
     }
     for (int i = 0; i < size(survive); i++) {
-        std::cout << "survive criteria: " << survive[i] << std::endl;
+        std::cout << "Survival criteria: " << survive[i] << std::endl;
     }
 
     // init video
@@ -403,7 +465,6 @@ int main(int argc, char* argv[]) {
         printf("SDL_Init Error: %s\n", SDL_GetError());
         return 1;
     }
-
     SDL_Window* window = SDL_CreateWindow("gameoflife", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
     if (window == NULL) {
         printf("SDL_CreateWindow Error: %s\n", SDL_GetError());
@@ -415,12 +476,8 @@ int main(int argc, char* argv[]) {
         printf("SDL_CreateRenderer Error: %s\n", SDL_GetError());
         return 1;
     }
-
-    //bool active = true; // TODO do i need this?
     SDL_Event Event;
-
     SDL_Rect rect;
-
     // number of ticks since the start of the game
     Uint32 ticksStart = SDL_GetTicks();
     // number of ticks at the time of the last update
@@ -429,7 +486,7 @@ int main(int argc, char* argv[]) {
     Uint32 ticksNow = ticksStart;
 
     // prime the randomizer
-    if (start_rand == true) {
+    if (random_start == true) {
         initrandom(randomness);
     } else {
         initclear();
