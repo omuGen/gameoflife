@@ -395,35 +395,26 @@ int main(int argc, char* argv[]) {
     if (rules.flag) {
         std::cout << "Started with 'Rulestring' option: " << rules.value << std::endl;
         std::string val = rules.value;
-        birth.clear();
-        survive.clear();
-        int pos = 0;
-        std::string digit;
-        if ((pos = val.find('B')) != std::string::npos) {
-            //std::cout << "Birth rule found." << std::endl;
-            if ((pos = val.find('S')) != std::string::npos) {
-                //std::cout << "Survive rule found." << std::endl;
-                std::string birth_rule = val.substr(1,val.find("S")-1);
-                //std::cout << "birth_rule: " << birth_rule << std::endl;
-                std::string survive_rule = val.substr(val.find("S")+1,size(val));
-                //std::cout << "survive_rule: " << survive_rule << std::endl;
-                while (size(birth_rule) != 0) {
-                    birth.push_back(stoi(birth_rule.substr(0,1)));
-                    birth_rule.erase(0,1);
-                }
-                while (size(survive_rule) != 0) {
-                    survive.push_back(stoi(survive_rule.substr(0,1)));
-                    survive_rule.erase(0,1);
-                }
-            } else {}
+        if (val.find('B') != std::string::npos && val.find('S') != std::string::npos) {
+            std::cout << "Valid rulestring found. Parsing " << val << std::endl;
+            birth.clear();
+            survive.clear();
+            std::string birth_rule = val.substr(1,val.find("S")-1);
+            std::string survive_rule = val.substr(val.find("S")+1,size(val));
+            while (size(birth_rule) != 0) {
+                birth.push_back(stoi(birth_rule.substr(0,1)));
+                birth_rule.erase(0,1);
+            }
+            while (size(survive_rule) != 0) {
+                survive.push_back(stoi(survive_rule.substr(0,1)));
+                survive_rule.erase(0,1);
+            }
         } else {
-            std::cout << "Invalid rulestring: needs a Birth rule!" << std::endl;
+            std::cout << "Invalid rulestring. Using default B3S23." << std::endl;
         }
     }
-
-
     // randomness
-
+    /*
     int rand_val = GetCLIArgs(argc, arg_list, "-r");
     if (rand_val != 0) {
         random_start = true;
@@ -458,7 +449,7 @@ int main(int argc, char* argv[]) {
     }
     for (int i = 0; i < size(survive); i++) {
         std::cout << "Survival criteria: " << survive[i] << std::endl;
-    }
+    }*/
 
     // init video
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -487,7 +478,7 @@ int main(int argc, char* argv[]) {
 
     // prime the randomizer
     if (random_start == true) {
-        initrandom(randomness);
+        initrandom(random_value);
     } else {
         initclear();
     }
